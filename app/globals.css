@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/* Palette taken from Mars itself: rust ground, sand haze, and the blue of a Martian sunset. */
+@theme {
+  --color-dusk: #1c0f0b;
+  --color-umber: #3b2118;
+  --color-regolith: #b5613a;
+  --color-sand: #f0dcc0;
+  --color-sunset: #8ec5f0;
+  --color-safe: #86d6b0;
+  --color-sulfur: #f2c230;
+  --color-flare: #ff5533;
+}
+
+@theme inline {
+  --font-body: var(--ff-body), system-ui, sans-serif;
+  --font-display: var(--ff-display), Impact, sans-serif;
+  --font-stencil: var(--ff-stencil), Impact, sans-serif;
+}
+
+body {
+  background: var(--color-dusk);
+  color: var(--color-sand);
+  font-family: var(--font-body);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-sunset);
+  outline-offset: 2px;
+}
+
+@keyframes alarm {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.alarm {
+  animation: alarm 1s ease-in-out infinite;
+}
+
+/* A gauge in danger: its border flashes red. */
+@keyframes alarm-border {
+  50% {
+    border-color: var(--color-flare);
+  }
+}
+
+.alarm-border {
+  animation: alarm-border 0.8s ease-in-out infinite;
+}
+
+/* Something new on screen rises into place. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+.rise {
+  animation: rise 0.25s ease-out;
+}
+
+/* The parts counter jumps when it grows. */
+@keyframes pop {
+  30% {
+    transform: scale(1.35);
+  }
+}
+
+.pop {
+  animation: pop 0.4s ease-out;
+}
+
+/* A fact card slides in, stays to be read, then leaves by itself. */
+@keyframes toast {
+  0% {
+    opacity: 0;
+    transform: translateY(-1rem);
+  }
+  4%,
+  92% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.toast {
+  animation: toast 9s ease-out forwards;
+}
+
+/* ARIA's face: a white ball with one blue eye. */
+.orb {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 55%, var(--color-sunset) 0 22%, var(--color-dusk) 23% 30%, var(--color-sand) 31%);
+  box-shadow: 0 0 0 3px var(--color-regolith);
+  animation: alarm 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Without its fade-out a fact card would never leave, so it is shown once at the end instead. */
+  .toast {
+    display: none;
+  }
+}
