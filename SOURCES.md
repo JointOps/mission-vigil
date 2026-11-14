@@ -64,3 +64,18 @@ Rule: any value not sourced is labeled *(game)* in code and on screen. Nothing u
 | Atkinson Hyperlegible Next (font) | SIL Open Font License 1.1 | Braille Institute, via Google Fonts |
 
 The 3D scene is procedural: no models, textures, images or audio files. List licences and attribution here before adding any.
+
+## Items to verify before presenting as fact
+
+| Topic | Use |
+|---|---|
+| Spacecraft CO₂ limit | Life support; otherwise use a game value |
+| Solar output on Mars and dust loss | Power; otherwise use a game value |
+| Water recycling recovery rate | Water system |
+| Crop yield and growth time | Food; otherwise use a game value |
+| Perchlorates in Martian soil | Food debrief |
+| Regolith shielding versus thickness | Radiation; otherwise use a game value |
+| Mars–Earth communications delay | Story |
+| Ascent propellant requirements | Launch |
+
+The spacesuit oxygen-duration sources listed above still need their cited pages checked. Sources are references for educational context; the game compresses time and uses explicit game rules for playability.

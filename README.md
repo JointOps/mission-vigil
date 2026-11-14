@@ -1,59 +1,81 @@
-# MISSION VIGIL: Junior Astronaut Mission Trainer
+# MISSION VIGIL
+### Junior Astronaut Mission Trainer
 
-A browser-based survival game for students: alone on Mars, players restore an outpost, balance scarce resources, and learn from mission failures using NASA research and clearly labeled game rules.
+**The base is asleep. The air is going bad. You have five sols to keep it alive.**
 
-## Challenge
+[▶ Play the mission](https://mission-vigil.vercel.app) · [Science & sources](SOURCES.md) · [Meet the team](#team-jointops) · [Run locally](#run-locally)
+
+A browser-based survival game by **Team JointOps, Pakistan**, for the **NASA Space Apps Challenge 2026**. Players walk an astronaut through a Martian outpost, restore its systems, and learn how one resource decision can affect the rest of the mission. No account is required.
+
+---
+
+## The challenge
 
 > Build a Junior Astronaut Mission Trainer — an interactive game or app that lets students run a lunar or Martian outpost, balancing competing demands like life support, radiation shielding, power, and food production, so they experience firsthand the decisions that determine whether a mission fails or succeeds.
 
-## How it answers the challenge
+## Five sols. One interconnected base.
 
-The game is one mission of five sols. A sol is one day on Mars. You wake in a dark, sleeping base with ARIA, a small helper robot, and walk your astronaut around to bring the base back to life. Each sol adds one demand the outpost has to balance.
+A **sol** is a day on Mars. Each day introduces another demand while earlier systems still need attention.
 
-- **Sol 1, First Breath (life support).** Switch on the power and share it between the air cleaner and the oxygen maker. Go out in a suit to brush dust off the solar panels. At sunset the panels stop and the cold comes: the heater needs power too.
-- **Sol 2, Keep the Lights On (power).** A dust storm buries the panels. For most of a sol there are only 3 power to share between the air cleaner, the oxygen maker and the heater. The air cleaner's filter fills up in the middle of it.
-- **Sol 3, Green Thumb (food and water).** You are hungry. Salad needs water, light and time, so watering it early pays off. Fixing the water cleaner makes it grow twice as fast.
-- **Sol 4, Storm Warning (radiation).** The base springs a leak, and then a solar flare is on its way. Patch the hole in time, or wait indoors and lose air?
-- **Sol 5, Launch Window (the way home).** Point the radio dish at Earth, and restart the big air system at sunset.
+| Sol | Mission | What the player balances |
+| :--- | :--- | :--- |
+| **01 · First Breath** | Restore life support | Oxygen, CO₂, power, and heat |
+| **02 · Keep the Lights On** | Weather a dust storm | Solar output, heating, and air cleaning |
+| **03 · Green Thumb** | Grow food | Water, light, power, and time |
+| **04 · Storm Warning** | Respond to a solar flare | Shelter, radiation, and a habitat leak |
+| **05 · Launch Window** | Call home | Communications and the systems keeping the base alive |
 
-Extra jobs (exercise bike, weather station, rover, radio dish, rock samples) earn parts for upgrades from the 3D printer. Every first-time job unlocks a "Did you know?" card with a real space fact and its source. Stars, a rank, six badges and a best score give reasons to play again.
+Explore the outpost, follow ARIA’s guidance, earn parts from tasks, and use the 3D printer to buy upgrades. Fact cards connect actions to space research; a report card shows the outcome. Time, event severity, and selected thresholds are compressed or tuned for play, and are identified as game rules in [SOURCES.md](SOURCES.md).
 
-Live demo: TODO  
-Screenshots: TODO
+## Try it
 
-## Tech stack
+**[Launch MISSION VIGIL →](https://mission-vigil.vercel.app)**
 
-Next.js App Router, TypeScript, Tailwind CSS, Three.js, React Three Fiber, drei, and Zustand. React Three Fiber 9 supports React 19 (see its [npm package](https://www.npmjs.com/package/@react-three/fiber)). The simulation in `engine/` is plain TypeScript with no UI dependencies; see [CLAUDE.md](CLAUDE.md) for the architecture and code rules.
+- **Keyboard:** arrow keys or WASD to move; E, Space, or Enter to interact and advance dialogue; P to pause.
+- **Touch:** tap the ground to move and tap a machine to interact.
+- Follow the guided introduction and the yellow trail to the next task. Blue markers indicate optional jobs.
 
-## Quick start
+The game stores a best score in the browser’s local storage. It has no accounts or analytics and does not collect personal data.
 
-Use the Node version in `.nvmrc` and npm:
+## How it works
 
-Controls: arrow keys or W A S D to walk, E (or Space or Enter) to use things and to read on, P to pause. On a phone, tap where you want to go and tap a machine to use it.
+The interface and 3D scene are built with **Next.js, React, TypeScript, Three.js, React Three Fiber, drei, and Tailwind CSS**. A plain TypeScript simulation models the systems; **Zustand** connects that simulation to the player interface. The scene is procedural and uses no external 3D models or textures.
+
+The simulation distinguishes sourced values from game rules. See [SOURCES.md](SOURCES.md) for research, asset licences, and items still requiring verification.
+
+## Run locally
+
+Use Node.js 24 (see `.nvmrc`) and npm:
 
 ```sh
-npm install
+npm ci
 npm run dev
+```
+
+Open [localhost:3000](http://localhost:3000). For verification:
+
+```sh
 npm test
+npm run lint
 npm run build
 ```
 
-## Team
+## Team JointOps
 
-All members are from Pakistan. Handles below are Space Apps handles, not GitHub usernames.
+Five builders from Pakistan. Handles are Space Apps handles, not GitHub usernames.
 
-| Member | Space Apps handle | Roles |
-|---|---|---|
-| Shayan Hussain (Team Owner) | @rockstarsb | Backend architecture and integration |
+| Member | Space Apps handle | Role |
+| :--- | :--- | :--- |
+| Shayan Hussain · Team Owner | @rockstarsb | Backend architecture and integration |
 | AbdulMoiz Yousuf | @moizyousuf | Frontend lead |
 | Owais Iqbal | @owaistar | AI, management, and game design |
 | Zoha Hasan | @zo._ha | Documentation |
 | Maha Waris Khan | @mahawaris | Frontend support |
 
-## NASA data and AI use
+## AI disclosure
 
-See [sources and verification needs](docs/SOURCES.md) and the [AI disclosure](docs/AI_DISCLOSURE.md). The [white paper](docs/WHITEPAPER.md) is the project design source of truth.
+Claude (Anthropic) assisted with the white paper, research, and code. OpenAI Codex assisted with repository setup and code. Any AI-generated images must carry a visible watermark. The game scene is procedural and does not use image assets.
 
-## License
+## Licence
 
-MIT; see [LICENSE](LICENSE).
+[MIT](LICENSE). Third-party font licences and research sources are listed in [SOURCES.md](SOURCES.md).
