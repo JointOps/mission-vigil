@@ -76,6 +76,6 @@ Rule: any value not sourced is labeled *(game)* in code and on screen. Nothing u
 | Big Shoulders, Big Shoulders Stencil (fonts) | SIL Open Font License 1.1 | Google Fonts, loaded through `next/font` |
 | Atkinson Hyperlegible Next (font) | SIL Open Font License 1.1 | Braille Institute, via Google Fonts |
 
-| README screenshots (`public/media/*.jpg`) and share image (`app/opengraph-image.jpg`) | Our own work, MIT | Captured from the running game in headless Chrome |
+| README screenshots, trailer and its poster (`public/media/`), share image (`app/opengraph-image.jpg`) | Our own work, MIT | Captured from the running game in headless Chrome; the trailer's text cards are our own HTML and CSS, and it has no music or voice |
 
 The game itself is procedural: no models, textures, images or audio files. List licences and attribution here before adding any.

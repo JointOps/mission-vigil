@@ -2,9 +2,11 @@
 
 **The base is asleep. The air is going bad. You have five sols to keep it alive.**
 
-[▶ Play the mission](https://mission-vigil.vercel.app) · [Science & sources](SOURCES.md) · [Meet the team](#team-jointops) · [Run locally](#run-locally)
+[▶ Play the mission](https://mission-vigil.vercel.app) · [▶ Watch the 30-second trailer](https://mission-vigil.vercel.app/media/trailer.mp4) · [Science & sources](SOURCES.md) · [Meet the team](#team-jointops) · [Run locally](#run-locally)
 
-![The MISSION VIGIL title screen: a small Mars base at sunset, a live map of Earth and Mars, and six chapters](public/media/title.jpg)
+[![Trailer frame: the astronaut outside the Mars base as dust covers the solar panels, with the caption "Ride out the dust storm." Click to watch the 30-second trailer.](public/media/trailer-poster.jpg)](https://mission-vigil.vercel.app/media/trailer.mp4)
+
+**[▶ Watch the 30-second trailer](https://mission-vigil.vercel.app/media/trailer.mp4)** (silent, with English text on screen and a subtitle track; the file is also in this repo at [`public/media/trailer.mp4`](public/media/trailer.mp4)). It shows real gameplay.
 
 A browser game by **Team JointOps, Pakistan**, for the **NASA Space Apps Challenge 2026**. Players walk an astronaut through a Martian outpost, wake its systems one by one, and learn how one resource decision affects the rest of the mission. It runs in a web browser with nothing to install and no account.
 
@@ -34,8 +36,8 @@ A **sol** is a day on Mars. Each sol adds one new demand, and the earlier system
 | :---: | :---: |
 | ![The guided start: ARIA the helper robot, the power box, and a "Did you know?" card about the length of a sol](public/media/guided-start.jpg) | ![Outside in a spacesuit, cleaning dust off the solar panels at sunrise](public/media/solar-panels.jpg) |
 | A guided start teaches one control at a time | Clean the solar panels before the suit air runs out |
-| ![A solar flare: the warning "Solar flare! Stay inside." and a radiation gauge](public/media/solar-flare.jpg) | |
-| Shelter from a solar flare | |
+| ![A solar flare: the warning "Solar flare! Stay inside." and a radiation gauge](public/media/solar-flare.jpg) | ![The title screen: a small Mars base at sunset, a live map of Earth and Mars, and six chapters](public/media/title.jpg) |
+| Shelter from a solar flare | Six chapters; Chapter 1 is playable |
 
 ARIA, a small flying helper robot, tells the story and guides the player. A yellow trail leads to each must-do job. Blue jobs are optional. Jobs pay parts, and the 3D printer turns parts into upgrades. Daily chores come back every morning, as they do for real crews. A "?" window answers the big questions at any time: what a sol is, why CO₂ matters, how far away Earth is.
 
@@ -66,7 +68,7 @@ The game keeps one thing in the browser's local storage: the best score. The nam
 
 ## How it works
 
-The interface and 3D scene are built with **Next.js, React, TypeScript, Three.js, React Three Fiber, and Tailwind CSS**. A plain TypeScript simulation models the systems, and **Zustand** connects it to the interface. The game uses no image, model, texture or audio files: the scene is procedural, the icons are hand-drawn SVG, and every sound is made with the Web Audio API. The screenshots in this README are captures of the game.
+The interface and 3D scene are built with **Next.js, React, TypeScript, Three.js, React Three Fiber, and Tailwind CSS**. A plain TypeScript simulation models the systems, and **Zustand** connects it to the interface. The game uses no image, model, texture or audio files: the scene is procedural, the icons are hand-drawn SVG, and every sound is made with the Web Audio API. The screenshots and trailer in this README are captures of the game.
 
 The 3D scene loads after the page, behind a short loading screen, so the controls work while it arrives. In our tests it held 60 frames per second mid-game, even with Chrome slowing the processor to a quarter of its speed, and the page changed about 20 times a second. We have not yet tested it on a low-end graphics chip.
 
@@ -105,7 +107,7 @@ Team JointOps is based in Pakistan. Handles are Space Apps handles, not GitHub u
 
 ## AI disclosure
 
-Claude (Anthropic) assisted with the white paper, research, and code. OpenAI Codex assisted with repository setup and code. Claude also wrote the scripts that captured the screenshots in this README from the running game. Any AI-generated images must carry a visible watermark. The game scene is procedural and does not use image assets.
+Claude (Anthropic) assisted with the white paper, research, and code. OpenAI Codex assisted with repository setup and code. Claude also wrote the scripts that captured the screenshots and the trailer from the running game and edited the trailer together; the trailer shows real gameplay and carries a visible "Made with help from Super Intelligence" mark. Any AI-generated images must carry a visible watermark. The game scene is procedural and does not use image assets.
 
 ## Licence
 
