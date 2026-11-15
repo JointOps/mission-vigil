@@ -7,7 +7,7 @@ export const OXYGEN_KG_PER_DAY = { value: 0.84, unit: "kg/day", kind: "real" } a
 export const CO2_KG_PER_DAY = { value: 1, unit: "kg/day", kind: "real" } as const satisfies Constant;
 /** Approximate length of a Mars sol in minutes. https://www.sciencedaily.com/releases/2013/12/131209181133.htm */
 export const SOL_MINUTES = { value: 1479, unit: "minutes", kind: "real" } as const satisfies Constant;
-/** Approximate interval between launch windows. https://www.nsta.org/science-scope/science-scope-julyaugust-2020/back-mars */
+/** Approximate interval between launch windows. https://science.nasa.gov/planetary-science/programs/mars-exploration/mission-timeline/ */
 export const LAUNCH_WINDOW_MONTHS = { value: 26, unit: "months", kind: "real" } as const satisfies Constant;
 
 // ── Chapter 1 ──────────────────────────────────────────────────────────────

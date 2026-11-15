@@ -4,11 +4,11 @@
 |---|---|
 | O₂ 0.84 kg/day, CO₂ 1.00 kg/day | https://ntrs.nasa.gov/api/citations/20100036823/downloads/20100036823.pdf |
 | Food solids 0.62 kg/day | https://ntrs.nasa.gov/api/citations/20190027610/downloads/20190027610.pdf |
-| Water 4.35 kg/day (BVAD) | Anderson et al. (2018), NASA/TP-2015-218570/REV1, via https://www.frontiersin.org/journals/space-technologies/articles/10.3389/frspt.2024.1461389/epub |
+| Water 4.35 kg/day (BVAD) | Anderson et al. (2018), NASA/TP-2015-218570/REV1 (https://ntrs.nasa.gov/citations/20180001338), cited in https://www.frontiersin.org/journals/space-technologies/articles/10.3389/frspt.2024.1461389/full |
 | Mars surface radiation; sol length | Hassler et al. (2014), *Science* 343(6169), doi:10.1126/science.1244797 · https://www.sciencedaily.com/releases/2013/12/131209181133.htm |
 | Cruise radiation 1.84 mSv/day | https://www.scientificamerican.com/article/radiation-on-mars-managea/ |
 | 600 mSv career limit; Mars missions likely need waivers | https://www.nationalacademies.org/news/nasa-should-update-astronaut-radiation-exposure-limits-improve-communication-of-cancer-risks |
-| 26-month launch window | https://www.nsta.org/science-scope/science-scope-julyaugust-2020/back-mars |
+| 26-month launch window | NASA Mars Exploration, Mission Timeline: https://science.nasa.gov/planetary-science/programs/mars-exploration/mission-timeline/ |
 | Torpor for Mars missions (NIAC) | https://ntrs.nasa.gov/citations/20180008683 |
 | CHAPEA analog mission | https://www.nasa.gov/missions/voyagers-of-mars-the-first-chapea-crews-yearlong-journey |
 | CO₂ limits: 0.7% (5.3 mmHg) for 7–180 days, 1.3% (10 mmHg) for 24 hours | https://ntrs.nasa.gov/citations/20150021777 |
