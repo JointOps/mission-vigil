@@ -2,8 +2,8 @@
 // breaks the intended lessons fails loudly.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { badges, reportCard } from "./scoring.ts";
-import { type Area, buy, co2Pct, EVENTS, FLARE, initialState, isCold, isOver, isStorm, type Job, jobs, MAX_PARTS, o2Pct, powerAt, seen, setCells, type SimState, step, take, TUTORIAL_DONE, UPGRADE_COST } from "./simulate.ts";
+import { badges, finalCheck, reportCard } from "./scoring.ts";
+import { type Area, buy, co2Pct, EVENTS, FLARE, initialState, isCold, isOver, isStorm, type Job, jobs, MAX_PARTS, o2Pct, powerAt, reserveSols, seen, setCells, type SimState, step, take, TUTORIAL_DONE, UPGRADE_COST } from "./simulate.ts";
 import { areaOf, type Point, route, START, STATIONS, stationNear, walk } from "./world.ts";
 
 const TICK = 0.1;
@@ -146,8 +146,29 @@ test("the solar flare is deadly outside and harmless inside", () => {
   assert.ok(!isOver(dash) && dash.dose > 0.5, "a quick dash out to patch the leak can be survived");
   let safe = flare;
   while (safe.sol < FLARE.to) safe = step(safe, idle, TICK);
-  assert.equal(safe.dose, 0);
-  assert.equal(jobs(flare)[0].at, "shelter");
+  assert.equal(safe.dose, 0, "behind the walls and the bag shelter");
+  let bare: SimState = { ...flare, work: { ...flare.work, bags: 3 } };
+  assert.deepEqual(jobs(bare).slice(0, 2).map((j) => j.at), ["bags", "shelter"]);
+  while (bare.sol < FLARE.to) bare = step(bare, idle, TICK);
+  assert.ok(!isOver(bare) && bare.dose > 0.2, "the walls alone let some through, but not enough to end the chapter");
+});
+
+test("a leak is worked the way real crews do: read how much time there is, then patch", () => {
+  let s: SimState = { ...tutorial(), sol: 3.03, nextEvent: EVENTS.findIndex((e) => e.id === "leak") };
+  while (s.work.leak === 0) s = step(s, idle, TICK);
+  assert.equal(jobs(s)[0].at, "gauge");
+  while (s.work.gauge > 0) s = step(s, { area: "inside", near: "gauge", working: true }, TICK);
+  assert.equal(s.message, "gathered");
+  assert.ok(s.facts.includes("gather"));
+  assert.ok(reserveSols(s, "inside") < 10, "the leak puts a number on the time left");
+  assert.equal(jobs(s)[0].at, "storage");
+  assert.equal(jobs(take(s))[0].at, "leak");
+});
+
+test("dust covers the panels again on the last sol", () => {
+  let s: SimState = { ...tutorial(), sol: 4, nextEvent: EVENTS.findIndex((e) => e.id === "lastsol"), work: { ...tutorial().work, panel0: 0, panel1: 0, panel2: 0 } };
+  while (!seen(s, "lastsol")) s = step(s, idle, TICK);
+  assert.deepEqual(jobs(s).slice(0, 3).map((j) => j.at), ["panel0", "panel1", "panel2"]);
 });
 
 test("salad has to be watered and grown before it is eaten, and an empty stomach slows work", () => {
@@ -222,4 +243,14 @@ test("the astronaut can walk between every pair of stations", () => {
   assert.equal(stationNear(STATIONS.power), "power");
   assert.equal(stationNear(STATIONS.shelter), null, "the shelter spot is not something to use");
   assert.equal(stationNear(START), null);
+});
+
+test("the final check asks five questions, and only about fact cards the player found", () => {
+  const few = finalCheck(["sol", "co2", "moxie"]);
+  assert.equal(few.length, 5);
+  assert.ok(few.every((q) => !q.card), "no card questions without the cards");
+  const more = finalCheck(["sol", "delay", "water", "gather"]);
+  assert.deepEqual(more.slice(3).map((q) => q.card), ["gather", "water"]);
+  assert.equal(new Set(more).size, 5);
+  assert.notDeepEqual(more.slice(0, 3), few.slice(0, 3), "another mission, other questions");
 });

@@ -28,7 +28,7 @@ export const SURFACE_BUDGET_MSV = { value: 300, unit: "mSv", kind: "game" } as c
 /** Event allowance derived from the game budget minus baseline dose. https://www.sciencedaily.com/releases/2013/12/131209181133.htm */
 export const EVENT_ALLOWANCE_MSV = { value: 76, unit: "mSv", kind: "game" } as const satisfies Constant;
 
-// ── Chapter 1: First Breath ────────────────────────────────────────────────
+// ── Chapter 1 ──────────────────────────────────────────────────────────────
 
 /** Length of a sol in Earth days, derived from SOL_MINUTES / 1440. */
 export const SOL_DAYS = SOL_MINUTES.value / 1440;
@@ -83,8 +83,10 @@ export const TEMP_DANGER_C = { value: 5, unit: "°C", kind: "game" } as const sa
 /** Cabin temperature that ends the chapter: water freezes at 0 °C. Game rule. */
 export const TEMP_FAIL_C = { value: 0, unit: "°C", kind: "game" } as const satisfies Constant;
 /** Sols a full stomach lasts before hunger slows the astronaut down. Game rule. */
-export const FULL_SOLS = { value: 3.2, unit: "sols", kind: "game" } as const satisfies Constant;
+export const FULL_SOLS = { value: 3.6, unit: "sols", kind: "game" } as const satisfies Constant;
 /** Sols watered salad takes to grow under the lamps. Game rule: real plants take weeks. */
 export const GROW_SOLS = { value: 1, unit: "sols", kind: "game" } as const satisfies Constant;
+/** Indoors, before the bag shelter is built, the flare does this share of its harm. Game rule. */
+export const FLARE_INDOOR_SHARE = { value: 0.25, unit: "", kind: "game" } as const satisfies Constant;
 /** Seconds of play outside in the solar flare that end the chapter. Game rule: far stronger than a real flare felt on the surface of Mars. */
 export const FLARE_SECONDS = { value: 9, unit: "s", kind: "game" } as const satisfies Constant;

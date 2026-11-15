@@ -34,6 +34,11 @@
 | Space Station crews exercise about two hours a day to protect bones and muscles | https://www.nasa.gov/missions/station/iss-research/astronaut-exercise |
 | Opportunity was designed for 90 sols and worked for almost 15 years (2004 to 2018) | https://www.jpl.nasa.gov/news/nasas-opportunity-rover-mission-on-mars-comes-to-end/ |
 | Perseverance saw the first visible-light aurora from the surface of another planet (March 2024, after a solar storm) | https://www.jpl.nasa.gov/news/nasa-observes-first-visible-light-auroras-at-mars/ |
+| Space Station emergency response: warn, gather, work; the crew first works out the time left before the pressure is too low | Tobias and McMillan (NASA JSC), SpaceOps 2023: https://ntrs.nasa.gov/citations/20220019247 |
+| Orion crews stack stowage bags into a radiation shelter during a solar particle event | https://science.nasa.gov/science-research/heliophysics/how-nasa-will-protect-astronauts-from-space-radiation-at-the-moon |
+| Orbits of Earth and Mars (space map): Keplerian elements for 1800 to 2050 | Standish and Williams, via NASA JPL: https://ssd.jpl.nasa.gov/planets/approx_pos.html |
+| Astronomical unit 149,597,870.7 km; speed of light 299,792.458 km/s | NASA JPL: https://ssd.jpl.nasa.gov/astro_par.html |
+| Mars weather at the weather station: 30 sols of air temperature and pressure from Curiosity's REMS station (sols 4966 to 4995, copied 2026-11-15 into `engine/weather.ts`) | Feed: https://mars.nasa.gov/rss/api/?feed=weather&category=msl&feedtype=json · Instrument: https://science.nasa.gov/mission/msl-curiosity/science-instruments/ · Data credit NASA/JPL-Caltech/CAB (CSIC-INTA); the feed says it is for outreach use, and points to the PDS for science use |
 | The solar storm of August 1972 fell between Apollo 16 and Apollo 17 and would have been dangerous to astronauts on the Moon | NASA SVS, "How NASA Will Protect Astronauts From Space Radiation": https://svs.gsfc.nasa.gov/13275 |
 
 **Name check:** Steam games "Vigil" (horror) and "Vigil: The Longest Night" (fantasy) exist. We always use the full title "MISSION VIGIL: Junior Astronaut Mission Trainer."
@@ -46,8 +51,11 @@ These are game rules, tuned for play, and are tagged `kind: "game"` in `engine/c
 - Machine output per power, the leak rate, how long each job takes, parts and upgrade prices, and event timing.
 - Suit air: 40 seconds of play, standing in for the real 7 hours.
 - Heat: the cabin tops out at 20 °C, cools by 36 °C per sol at night or under the dust, warms by 24 °C per sol by day, and gains 28 °C per sol for each power given to the heater.
-- Food: a full stomach lasts 3.2 sols, and watered salad grows in 1 sol. Real plants take weeks.
-- The solar flare: 9 seconds outside ends the chapter. This is far stronger than a real flare would feel on the surface of Mars, and the failure screen says so. The radiation meter shows a share of this game limit, not a real dose.
+- Food: a full stomach lasts 3.6 sols, and watered salad grows in 1 sol. Real plants take weeks.
+- The solar flare: 9 seconds outside ends the chapter. Indoors it does a quarter of that harm until the bag shelter is stacked, and none after. This is far stronger than a real flare would feel on the surface of Mars, and the failure screen says so. The radiation meter shows a share of this game limit, not a real dose.
+- The "Time left" meter in a leak: sols until the oxygen reaches the level that ends the chapter, at the rate it is falling. Real crews work out the time until the pressure is too low; this game holds pressure constant, so it counts oxygen instead.
+- The space map leaves out the 1.85° tilt of Mars's orbit. Its "next good time to set off" is the day Mars is about 44° ahead of Earth, which follows from the two orbit sizes; real launch periods fall within a few weeks of it.
+- Dust covers the solar panels in the storm on sol 2 and again before sol 5.
 - One sol takes 60 seconds of play.
 - The levels that end the chapter: CO₂ 4%, oxygen 16%, cabin 0 °C.
 

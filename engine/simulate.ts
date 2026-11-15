@@ -10,6 +10,7 @@ import {
   CO2_KG_PER_DAY,
   CO2_SAFE_MAX_PCT,
   COOLING_C_PER_SOL,
+  FLARE_INDOOR_SHARE,
   FLARE_SECONDS,
   FULL_SOLS,
   GROW_SOLS,
@@ -44,7 +45,7 @@ export const ROCKS = ["rock0", "rock1", "rock2"] as const;
 export type System = "scrubber" | "oxygen" | "heater";
 export type Allocation = Readonly<Record<System, number>>;
 /** Hands-on jobs, each named after the station it is done at. */
-export type Task = "power" | "scrubber" | "leak" | "plant" | "salad" | "recycler" | "bike" | "antenna" | "weather" | "rover" | "console" | (typeof PANELS)[number] | (typeof ROCKS)[number];
+export type Task = "power" | "scrubber" | "gauge" | "leak" | "bags" | "plant" | "salad" | "recycler" | "bike" | "antenna" | "weather" | "rover" | "console" | (typeof PANELS)[number] | (typeof ROCKS)[number];
 export type StationId = Task | "storage" | "printer" | "shelter";
 export type Area = "inside" | "airlock" | "outside";
 export type Item = "filter" | "patch";
@@ -52,7 +53,7 @@ export type Upgrade = "boots" | "tools" | "tank" | "walls" | "battery";
 export type Failure = "co2" | "o2" | "suit" | "cold" | "radiation";
 export type Zone = "safe" | "caution" | "danger";
 export type EventId = "night" | "forecast" | "storm" | "filter" | "clear" | "hungry" | "leak" | "flare" | "allclear" | "lastsol" | "restart";
-export type MessageId = EventId | "intro" | "switch" | "cleaner" | "oxygen" | "ready" | "suit" | "earth";
+export type MessageId = EventId | "intro" | "switch" | "cleaner" | "oxygen" | "ready" | "suit" | "gathered" | "earth";
 export type FactId =
   | "sol"
   | "co2"
@@ -74,7 +75,9 @@ export type FactId =
   | "food"
   | "rover"
   | "flare"
-  | "aurora";
+  | "aurora"
+  | "gather"
+  | "shelter";
 
 /** What the astronaut is doing during a step. */
 export type Input = {
@@ -144,7 +147,7 @@ export const START_OF_DAY = 5.5 / 24;
 /** The dust storm. It ends in the morning, so the panels are cleaned in sunlight. Game rule. */
 export const STORM = { from: 1.35, to: 2.1 } as const;
 /** The solar flare: ARIA's warning comes a few seconds before it hits. Game rule. */
-export const FLARE = { from: 3.4, to: 3.7 } as const;
+export const FLARE = { from: 3.42, to: 3.7 } as const;
 /** The chapter script. Times are game rules. */
 export const EVENTS: readonly { id: EventId; atSol: number }[] = [
   { id: "night", atSol: 0.522 }, // sunset on sol 1
@@ -153,7 +156,7 @@ export const EVENTS: readonly { id: EventId; atSol: number }[] = [
   { id: "filter", atSol: 1.65 },
   { id: "clear", atSol: STORM.to },
   { id: "hungry", atSol: 2.3 },
-  { id: "leak", atSol: 3.08 },
+  { id: "leak", atSol: 3.04 },
   { id: "flare", atSol: 3.28 },
   { id: "allclear", atSol: FLARE.to },
   { id: "lastsol", atSol: 4.03 },
@@ -179,7 +182,9 @@ const rock: TaskRule = { seconds: 1.5, parts: 40, label: "Pick up a blue rock", 
 export const TASKS: Readonly<Record<Task, TaskRule>> = {
   power: { seconds: 1.2, parts: 20, label: "Turn on the power", fact: "sol" },
   scrubber: { seconds: 3.5, parts: 80, label: "Put the new filter in the air cleaner", fact: "apollo13", needs: "filter" },
+  gauge: { seconds: 1.5, parts: 40, label: "Read the air screen", fact: "gather" },
   leak: { seconds: 3.5, parts: 100, label: "Patch the hole by the outside door", fact: "thinair", needs: "patch" },
+  bags: { seconds: 3, parts: 60, label: "Stack the supply bags into a shelter", fact: "shelter" },
   console: { seconds: 1.5, parts: 100, label: "Press the big green button" },
   plant: { seconds: 2, parts: 30, label: "Water the salad plants", fact: "veggie", side: true },
   salad: { seconds: 2, parts: 60, label: "Pick the salad and eat it", fact: "food" },
@@ -197,8 +202,8 @@ export const TASKS: Readonly<Record<Task, TaskRule>> = {
 };
 const TASK_IDS = Object.keys(TASKS) as Task[];
 export const isTask = (id: StationId | null): id is Task => id !== null && id in TASKS;
-/** Most parts a perfect run can earn: every job once, the panels twice, and three guided steps. */
-export const MAX_PARTS = TASK_IDS.reduce((sum, t) => sum + TASKS[t].parts, 0) + PANELS.reduce((sum, p) => sum + TASKS[p].parts, 0) + 3 * STEP_PARTS;
+/** Most parts a perfect run can earn: every job once, the panels three times, and three guided steps. */
+export const MAX_PARTS = TASK_IDS.reduce((sum, t) => sum + TASKS[t].parts, 0) + 2 * PANELS.reduce((sum, p) => sum + TASKS[p].parts, 0) + 3 * STEP_PARTS;
 
 // Ideal gas law: n = PV / RT. Total pressure is held constant (game rule), so
 // each gas's share of the air is its moles over this fixed total.
@@ -225,7 +230,9 @@ export function tempZone(c: number): Zone {
 }
 
 export function initialState(): SimState {
-  const armed = (t: Task) => (t === "scrubber" || t === "leak" || t === "console" ? 0 : TASKS[t].seconds);
+  // Repairs and emergencies wait for their event.
+  const later: readonly Task[] = ["scrubber", "gauge", "leak", "bags", "console"];
+  const armed = (t: Task) => (later.includes(t) ? 0 : TASKS[t].seconds);
   return {
     stage: 0,
     sol: 0,
@@ -311,11 +318,16 @@ export function jobs(s: SimState): Job[] {
   const calling = seen(s, "lastsol") && s.work.antenna > 0;
 
   if (s.work.console > 0) list.push(WORK.console);
-  if (seen(s, "flare") && s.sol < FLARE.to) list.push(SHELTER);
+  if (seen(s, "flare") && s.sol < FLARE.to) {
+    if (s.work.bags > 0) list.push(WORK.bags);
+    list.push(SHELTER);
+  }
   if (s.work.scrubber > 0) list.push(s.carrying === "filter" ? WORK.scrubber : TAKE_FILTER);
   // The leak is the one outdoor job left open in the flare: patch it now, or wait and lose air?
+  // Warn, gather, work: the air screen is read before anyone runs to the hole.
   if (s.work.leak > 0) {
-    if (s.carrying === "patch") list.push(WORK.leak);
+    if (s.work.gauge > 0) list.push(WORK.gauge);
+    else if (s.carrying === "patch") list.push(WORK.leak);
     else if (s.work.scrubber === 0) list.push(TAKE_PATCH);
   }
   // The first cold night is a lesson with a reward; after that it is a reminder.
@@ -356,6 +368,12 @@ export function buy(s: SimState, upgrade: Upgrade): SimState {
 export function trends(s: SimState, area: Area): { o2: number; co2: number } {
   const r = rates(s, area);
   return { o2: r.o2 / O2_KG_PER_PCT, co2: r.co2 / CO2_KG_PER_PCT };
+}
+
+/** Sols until the oxygen is too low to go on, at the rate it is falling now. Infinity if it is not falling. */
+export function reserveSols(s: SimState, area: Area): number {
+  const falling = -rates(s, area).o2;
+  return falling > 0 ? Math.max(0, s.o2Kg - O2_FAIL_PCT.value * O2_KG_PER_PCT) / falling : Infinity;
 }
 
 /** Net change per sol: kg of each gas, and °C of cabin temperature. */
@@ -409,6 +427,7 @@ export function step(s: SimState, input: Input, seconds: number): SimState {
         say("cleaner");
       }
       if (task === "salad") d.food = 1;
+      if (task === "gauge") say("gathered");
       if (task === "antenna") say("earth");
       if (task === "console") d.won = true;
     }
@@ -458,21 +477,24 @@ export function step(s: SimState, input: Input, seconds: number): SimState {
   if (d.work.salad > 0) d.food = Math.max(0, s.food - dt / FULL_SOLS.value);
   // Watered salad grows under the lamps, and twice as fast once the water cleaner keeps it wet.
   if (s.work.plant === 0 && s.work.power === 0) d.grow = Math.min(1, s.grow + (dt / GROW_SOLS.value) * (s.work.recycler === 0 ? 2 : 1));
-  // Only the walls of the base stop the flare.
-  if (outside && isFlare(s.sol)) d.dose = Math.min(1, s.dose + seconds / FLARE_SECONDS.value);
+  // The walls stop most of the flare, and the bag shelter stops the rest.
+  const harm = outside ? 1 : s.work.bags > 0 ? FLARE_INDOOR_SHARE.value : 0;
+  if (isFlare(s.sol)) d.dose = Math.min(1, s.dose + (seconds / FLARE_SECONDS.value) * harm);
 
   if (fires) {
     d.nextEvent++;
     say(event.id);
     if (event.id === "night") learn("rtg");
-    if (event.id === "storm") {
-      // Dust buries the panels and the power box trips.
-      d.work = { ...d.work, panel0: TASKS.panel0.seconds, panel1: TASKS.panel1.seconds, panel2: TASKS.panel2.seconds };
-      d.alloc = NO_POWER;
-    }
+    // Dust buries the panels in the storm, and a dusty wind covers them again before the last sol.
+    if (event.id === "storm" || event.id === "lastsol") d.work = { ...d.work, panel0: TASKS.panel0.seconds, panel1: TASKS.panel1.seconds, panel2: TASKS.panel2.seconds };
+    // In the storm the power box trips too.
+    if (event.id === "storm") d.alloc = NO_POWER;
     if (event.id === "filter") d.work = { ...d.work, scrubber: TASKS.scrubber.seconds };
-    if (event.id === "leak") d.work = { ...d.work, leak: TASKS.leak.seconds };
-    if (event.id === "flare") learn("flare");
+    if (event.id === "leak") d.work = { ...d.work, leak: TASKS.leak.seconds, gauge: TASKS.gauge.seconds };
+    if (event.id === "flare") {
+      learn("flare");
+      d.work = { ...d.work, bags: TASKS.bags.seconds };
+    }
     if (event.id === "allclear") learn("aurora");
     if (event.id === "restart") d.work = { ...d.work, console: TASKS.console.seconds };
   }

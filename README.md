@@ -19,11 +19,11 @@ A **sol** is a day on Mars. Each day introduces another demand while earlier sys
 
 | Sol | Mission | What the player balances |
 | :--- | :--- | :--- |
-| **01 · First Breath** | Restore life support | Oxygen, CO₂, power, and heat |
-| **02 · Keep the Lights On** | Weather a dust storm | Solar output, heating, and air cleaning |
-| **03 · Green Thumb** | Grow food | Water, light, power, and time |
-| **04 · Storm Warning** | Respond to a solar flare | Shelter, radiation, and a habitat leak |
-| **05 · Launch Window** | Call home | Communications and the systems keeping the base alive |
+| **01 · Go for Air** | Restore life support | Oxygen, CO₂, power, and heat |
+| **02 · Go for Power** | Weather a dust storm | Solar output, heating, and air cleaning |
+| **03 · Go for Harvest** | Grow food | Water, light, power, and time |
+| **04 · Hold for Flare** | Respond to a solar flare | Shelter, radiation, and a habitat leak |
+| **05 · Go for Home** | Call home | Communications and the systems keeping the base alive |
 
 Explore the outpost, follow ARIA’s guidance, earn parts from tasks, and use the 3D printer to buy upgrades. Fact cards connect actions to space research; a report card shows the outcome. Time, event severity, and selected thresholds are compressed or tuned for play, and are identified as game rules in [SOURCES.md](SOURCES.md).
 

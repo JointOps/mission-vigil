@@ -3,7 +3,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import * as THREE from "three";
-import { co2Pct, co2Zone, isStorm, o2Pct, o2Zone, PANELS, powerAt, ROCKS, tempZone, type Upgrade } from "@/engine/simulate";
+import { co2Pct, co2Zone, isStorm, o2Pct, o2Zone, PANELS, powerAt, ROCKS, seen, tempZone, type Upgrade } from "@/engine/simulate";
 import { areaOf, BUNK, DISH, GARDEN_X, HULL, LOCK, MAST, PANEL_X, ROVER, STATIONS, TANKS } from "@/engine/world";
 import { useGame } from "@/store/game";
 import { BALL, Ball, Box, BOX, Cyl, flat, glow, M } from "./parts";
@@ -73,6 +73,8 @@ export function Base({ demo }: Props) {
   const dish = useRef<THREE.Group>(null!);
   const samples = useRef<THREE.Group>(null!);
   const leak = useRef<THREE.Mesh>(null!);
+  const bagHeap = useRef<THREE.Group>(null!);
+  const bagWall = useRef<THREE.Group>(null!);
   const innerDoor = useRef<THREE.Mesh>(null!);
   const outerDoor = useRef<THREE.Mesh>(null!);
 
@@ -145,6 +147,9 @@ export function Base({ demo }: Props) {
     roverHead.current.rotation.y = damp(roverHead.current.rotation.y, awake ? 0.9 * Math.sin(t * 0.7) : 0, 3, delta);
 
     samples.current.children.forEach((sample, i) => (sample.visible = demo || sim.work[ROCKS[i]] > 0));
+    // The supply bags lie in a heap until the flare, when they are stacked into a shelter.
+    bagWall.current.visible = !demo && seen(sim, "flare") && sim.work.bags === 0;
+    bagHeap.current.visible = !bagWall.current.visible;
     leak.current.visible = sim.work.leak > 0;
     leak.current.scale.setScalar(0.8 + 0.3 * Math.sin(t * 23));
 
@@ -221,6 +226,9 @@ export function Base({ demo }: Props) {
       {/* Air screen: green, yellow or red with the air */}
       <Box p={[-0.95, 1.6, -3.19]} s={[0.9, 0.62, 0.03]} m={M.dark} />
       <Box p={[-0.95, 1.6, -3.17]} s={[0.76, 0.48, 0.03]} m={AIR_SCREEN} />
+      {/* The dial under it is what you read in a leak */}
+      <Cyl p={[-0.95, 1.02, -3.16]} r={[HALF_PI, 0, 0]} s={[0.17, 0.05, 0.17]} m={M.cloth} />
+      <Box p={[-0.9, 1.06, -3.12]} r={[0, 0, -0.7]} s={[0.03, 0.15, 0.02]} m={M.trim} />
 
       {/* Power box: a lever and one light for each power */}
       <group position={[STATIONS.power.x, 0, -3]}>
@@ -311,6 +319,20 @@ export function Base({ demo }: Props) {
         <mesh ref={bubble} geometry={BALL} position={[0, 0.75, 0]} scale={0.07} material={M.cloth} visible={false} />
         <Cyl p={[0, 1.55, 0]} r={[0, 0, HALF_PI]} s={[0.04, 1, 0.04]} m={M.metal} />
         <Ball p={[0.68, 0.72, 0]} s={0.06} m={WATER_LAMP} />
+      </group>
+
+      {/* Supply bags: a heap by the wall, or a shelter wall once they are stacked */}
+      <group position={[STATIONS.bags.x, 0, SOUTH]}>
+        <group ref={bagHeap}>
+          <Box p={[-0.3, 0.14, -0.1]} s={[0.55, 0.28, 0.4]} m={M.cloth} shadow />
+          <Box p={[0.3, 0.14, -0.15]} r={[0, 0.3, 0]} s={[0.55, 0.28, 0.4]} m={M.blue} shadow />
+          <Box p={[0, 0.42, -0.1]} r={[0, -0.2, 0]} s={[0.55, 0.28, 0.4]} m={M.cloth} shadow />
+        </group>
+        <group ref={bagWall} visible={false}>
+          {[0, 1, 2, 3].map((row) =>
+            [-0.58, 0, 0.58].map((x) => <Box key={`${row}${x}`} p={[x + (row % 2) * 0.1, 0.14 + row * 0.29, -0.1]} s={[0.55, 0.28, 0.4]} m={(row + Math.round(x)) % 2 ? M.blue : M.cloth} shadow />),
+          )}
+        </group>
       </group>
 
       {/* Table by the airlock: a mug and a plate */}

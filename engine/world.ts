@@ -23,6 +23,7 @@ export const GARDEN_X = -3.4;
 /** Where the astronaut stands to use each station. */
 export const STATIONS: Readonly<Record<StationId, Point>> = {
   scrubber: { x: -4, z: -1.9 },
+  gauge: { x: -0.95, z: -1.9 },
   power: { x: 0.2, z: -1.9 },
   printer: { x: 2.4, z: -1.9 },
   storage: { x: 4.6, z: -1.9 },
@@ -30,6 +31,7 @@ export const STATIONS: Readonly<Record<StationId, Point>> = {
   salad: { x: GARDEN_X + 0.65, z: 1.9 },
   bike: { x: -0.9, z: 1.9 },
   console: { x: 1.6, z: 1.9 },
+  bags: { x: 3, z: 1.9 },
   recycler: { x: 4.4, z: 1.9 },
   shelter: { x: 3.4, z: 0.2 },
   leak: { x: 9.9, z: 1.3 },

@@ -7,7 +7,16 @@ import type { FactId, Failure, MessageId, Upgrade } from "./simulate.ts";
 export type Source = { readonly label: string; readonly url: string };
 export type Fact = { readonly title: string; readonly text: string; readonly source: Source };
 export type Debrief = { readonly title: string; readonly body: string; readonly lesson: string; readonly story: string; readonly source: Source };
-export type Question = { readonly prompt: string; readonly choices: readonly string[]; readonly answer: number; readonly why: string };
+export type Question = {
+  readonly prompt: string;
+  readonly choices: readonly string[];
+  readonly answer: number;
+  readonly why: string;
+  /** Asked only of a player who found this fact card. */
+  readonly card?: FactId;
+  /** Asked of a player whose mission stopped this way. */
+  readonly about?: Failure;
+};
 
 /** What ARIA, the base computer, says. Each entry is shown one line at a time while the game waits. */
 export const MESSAGES: Readonly<Record<MessageId, readonly string[]>> = {
@@ -59,11 +68,21 @@ export const MESSAGES: Readonly<Record<MessageId, readonly string[]>> = {
     "You have not eaten since you woke up, and the food packs are gone.",
     "But we have a garden! Salad needs water and light to grow. When it is big, pick it and eat.",
   ],
-  leak: ["This is sol 4. Warning! I hear air hissing.", "There is a hole by the outside door. Our air is leaking out!", "Take a patch from the shelf and fix the hole from outside. Be quick!"],
+  leak: [
+    "This is sol 4. Warning! I hear air hissing.",
+    "There is a hole by the outside door. Our air is leaking out!",
+    "Do not run to the hole yet. First come to the air screen. We need to know how much time we have.",
+  ],
+  gathered: [
+    "Good. Look at the new bar called Time left. It shows how long our air will last.",
+    "Space Station crews do it this way too: warn, gather, then work.",
+    "Now we work. Take a patch from the shelf and fix the hole from outside. Be quick!",
+  ],
   flare: [
     "Alarm! The Sun just shot out a burst of radiation. It is called a solar flare.",
     "Radiation is made of tiny, fast bits you cannot see. Too much of it can make you very sick.",
-    "It will hit us in a few seconds. The walls of the base keep you safe. Get inside, and stay inside until it is over!",
+    "It will hit us in a few seconds. Get inside! The walls stop most of it.",
+    "Then stack the supply bags by the big desk. A wall of bags stops the rest. Stay in until it is over!",
   ],
   allclear: [
     "All clear! The flare is over. You can go out again.",
@@ -71,11 +90,12 @@ export const MESSAGES: Readonly<Record<MessageId, readonly string[]>> = {
   ],
   lastsol: [
     "Good morning! This is sol 5, the last one. The big air system will be ready at sunset.",
-    "Earth can send a ship for us. But first they must know we are alive.",
-    "Make sure the radio dish points at Earth.",
+    "A dusty wind blew in the night. The solar panels are dirty again, so brush them clean.",
+    "Earth can send a ship for us. But first they must know we are alive. Then point the radio dish at Earth.",
   ],
   earth: [
-    "The dish is pointing at Earth. Listen!",
+    "The dish is pointing at Earth. Look at the map: the red dot is us, and the blue dot is Earth.",
+    "Our call is the small white dot. It has a long way to fly. Listen!",
     "“Mars Base, this is Earth. We hear you! Ships can only fly to Mars about every 26 months. The next one is coming for you. Keep the base alive.”",
     "They heard us! We can do this. Together.",
   ],
@@ -189,6 +209,16 @@ export const FACTS: Readonly<Record<FactId, Fact>> = {
     text: "In 2024, after a storm on the Sun, the Perseverance rover saw the sky of Mars glow green. It was the first aurora ever seen from the ground of another planet.",
     source: { label: "NASA: first visible auroras at Mars", url: "https://www.jpl.nasa.gov/news/nasa-observes-first-visible-light-auroras-at-mars/" },
   },
+  gather: {
+    title: "Warn, gather, work",
+    text: "The Space Station crew has three steps for any emergency. Warn everyone. Gather in one safe place. Then work on the problem. For a leak, they first work out how much time they have.",
+    source: { label: "NASA: emergency response on the Space Station", url: "https://ntrs.nasa.gov/citations/20220019247" },
+  },
+  shelter: {
+    title: "A fort made of bags",
+    text: "On NASA's Orion spaceship, the crew can stack their storage bags into a small shelter. They wait inside until the burst from the Sun has passed.",
+    source: { label: "NASA: protecting astronauts from space radiation", url: "https://science.nasa.gov/science-research/heliophysics/how-nasa-will-protect-astronauts-from-space-radiation-at-the-moon" },
+  },
 };
 export const FACT_IDS = Object.keys(FACTS) as FactId[];
 
@@ -201,20 +231,29 @@ export const UPGRADES: Readonly<Record<Upgrade, { readonly name: string; readonl
   battery: { name: "Spare battery", text: "1 more power, day and night." },
 };
 
-/** The five sols of the chapter. Each one brings one new thing to look after. */
-export const SOLS: readonly { readonly title: string; readonly focus: string }[] = [
-  { title: "First Breath", focus: "Air" },
-  { title: "Keep the Lights On", focus: "Power and heat" },
-  { title: "Green Thumb", focus: "Food and water" },
-  { title: "Storm Warning", focus: "Radiation" },
-  { title: "Launch Window", focus: "The call home" },
+/**
+ * The five sols of the chapter. Each one brings one new thing to look after.
+ * The titles borrow the "go" and "hold" calls a flight team makes before each step.
+ * `opens` is the message from ARIA that starts the sol, and shows its title card.
+ */
+export const SOLS: readonly { readonly title: string; readonly focus: string; readonly opens: MessageId }[] = [
+  { title: "Go for Air", focus: "Air", opens: "ready" },
+  { title: "Go for Power", focus: "Power and heat", opens: "forecast" },
+  { title: "Go for Harvest", focus: "Food and water", opens: "clear" },
+  { title: "Hold for Flare", focus: "Radiation", opens: "leak" },
+  { title: "Go for Home", focus: "The call home", opens: "lastsol" },
 ];
+
+/** Shown in the job list when every job that is left is a blue one. */
+/** The job list shows two blue jobs and counts the rest, so it stays short. */
+export const MORE_JOBS = (count: number) => `and ${count} more blue ${count === 1 ? "job" : "jobs"}`;
+export const IDLE_HINT = "No yellow jobs right now. Do a blue job to earn parts!";
 
 /** Extra goals shown at the end of a won chapter. */
 export const BADGES: Readonly<Record<BadgeId, { readonly name: string; readonly how: string }>> = {
   air: { name: "Fresh air", how: "Keep the CO₂ out of the red and the oxygen at 19.5% or more." },
   warm: { name: "Warm and cosy", how: "Never let the room get colder than 12 °C." },
-  flare: { name: "Flare smart", how: "Be inside for the whole solar flare." },
+  flare: { name: "Flare smart", how: "Take no radiation in the solar flare. Stack the bags in time!" },
   jobs: { name: "Busy bee", how: "Do every job, the blue ones too." },
   cards: { name: "Card collector", how: "Find every fact card." },
   maker: { name: "Maker", how: "Print every upgrade." },
@@ -245,7 +284,7 @@ export const FAILURES: Readonly<Record<Failure, Debrief>> = {
   radiation: {
     title: "Too much radiation",
     body: "You were outside in the solar flare for too long. In this game the flare is much stronger than a real one would feel on Mars.",
-    lesson: "When ARIA warns you, drop what you are doing and go inside. The walls keep you safe. Wait for the all clear.",
+    lesson: "When ARIA warns you, drop what you are doing and go inside. Stack the supply bags into a shelter. Wait for the all clear.",
     story: "In August 1972 the Sun shot out a huge burst of radiation. It came between two Moon trips, Apollo 16 and Apollo 17. Astronauts on the Moon that week could have become very sick. Today NASA watches the Sun all the time.",
     source: { label: "NASA: keeping astronauts safe from radiation", url: "https://svs.gsfc.nasa.gov/13275" },
   },
@@ -267,7 +306,46 @@ export const SUCCESS = {
 /** The player's rank, by parts earned. */
 export const RANKS = ["Cadet", "Astronaut", "Commander"] as const;
 
+/**
+ * The final check with Earth. Questions without a `card` are the main lessons of
+ * the mission; the rest are about fact cards, and are asked only if the card was found.
+ */
 export const QUIZ: readonly Question[] = [
+  {
+    prompt: "A storm takes half your power. Which machine do you keep on?",
+    choices: ["The oxygen maker", "The air cleaner", "Turn both off"],
+    answer: 1,
+    why: "The room holds days of spare oxygen, but CO₂ gets dangerous fast. Let the oxygen dip and catch up later.",
+    about: "co2",
+  },
+  {
+    prompt: "Why are dusty solar panels a problem?",
+    choices: ["Dust blocks the sunlight", "Dust makes them heavy", "Dust makes them too hot"],
+    answer: 0,
+    why: "Solar panels turn sunlight into power. Dust blocks the light. That is how the InSight lander ran out of power.",
+    about: "o2",
+  },
+  {
+    prompt: "The sun has set and the room is getting cold. What do you do?",
+    choices: ["Wait for the morning", "Open the door", "Give power to the heater"],
+    answer: 2,
+    why: "With no sun on the walls the base loses heat fast. The heater needs power at night and in a dust storm.",
+    about: "cold",
+  },
+  {
+    prompt: "ARIA warns you of a solar flare. What do you do?",
+    choices: ["Finish your job first", "Hide behind a rock", "Go inside and build a shelter"],
+    answer: 2,
+    why: "Walls and a stack of supply bags block the radiation. Real crews have a safe place to wait until the Sun is calm again.",
+    about: "radiation",
+  },
+  {
+    prompt: "You are outside and your suit air is half gone. What do you do?",
+    choices: ["Turn back to the airlock", "Run to one more job", "Hold your breath"],
+    answer: 0,
+    why: "You need air for the walk home too. Real trips outside are planned around the air in the suit.",
+    about: "suit",
+  },
   {
     prompt: "You are in a closed room with no machines on. What goes wrong first?",
     choices: ["The oxygen runs out", "Too much CO₂ builds up", "Both at the same time"],
@@ -275,27 +353,97 @@ export const QUIZ: readonly Question[] = [
     why: "You breathe out 1 kg of CO₂ a day, and only a little is safe. It gets dangerous while there is still lots of oxygen.",
   },
   {
-    prompt: "A storm takes half your power. Which machine do you keep on?",
-    choices: ["The oxygen maker", "The air cleaner", "Turn both off"],
-    answer: 1,
-    why: "The room holds days of spare oxygen, but CO₂ gets dangerous fast. Let the oxygen dip and catch up later.",
-  },
-  {
     prompt: "Why does the base have less power at night?",
-    choices: ["The machines get tired", "Solar panels need sunlight", "The cold breaks the wires"],
-    answer: 1,
+    choices: ["The machines get tired", "The cold breaks the wires", "Solar panels need sunlight"],
+    answer: 2,
     why: "Solar panels turn sunlight into power. No sun, no power. That is why some rovers carry a nuclear battery.",
   },
   {
-    prompt: "ARIA warns you of a solar flare. What do you do?",
-    choices: ["Finish your job first", "Go inside and wait", "Hide behind a rock"],
+    prompt: "The alarm rings on the Space Station. What are the crew's three steps?",
+    choices: ["Run, hide, wait", "Warn, gather, work", "Stop, look, listen"],
     answer: 1,
-    why: "Thick walls block the radiation. Real crews have a safe place to wait until a solar storm has passed.",
+    why: "They warn everyone, gather in one safe place, and only then work on the problem. You did the same for the leak.",
+    card: "gather",
   },
   {
-    prompt: "Why are dusty solar panels a problem?",
-    choices: ["Dust makes them heavy", "Dust blocks the sunlight", "Dust makes them too hot"],
+    prompt: "What can the crew of an Orion spaceship build a radiation shelter from?",
+    choices: ["Their storage bags", "Solar panels", "Spare spacesuits"],
+    answer: 0,
+    why: "They stack the bags they already have on board into a thick wall, and wait behind it.",
+    card: "shelter",
+  },
+  {
+    prompt: "You say hello to Earth by radio from Mars. When do they hear it?",
+    choices: ["Right away", "After 26 months", "After 4 to 22 minutes"],
+    answer: 2,
+    why: "Radio is as fast as light, but Mars is very far away. The wait changes as the two planets move.",
+    card: "delay",
+  },
+  {
+    prompt: "Why can you not breathe the air on Mars?",
+    choices: ["It is too wet", "It is almost all CO₂, and very thin", "It is too windy"],
     answer: 1,
-    why: "Solar panels turn sunlight into power. Dust blocks the light. That is how the InSight lander ran out of power.",
+    why: "Mars air is almost all CO₂ and more than 100 times thinner than air on Earth. That is why you wear a suit.",
+    card: "marsair",
+  },
+  {
+    prompt: "Where does the Space Station get most of its drinking water?",
+    choices: ["It cleans its used water", "It catches rain", "A ship brings it every day"],
+    answer: 0,
+    why: "It gets back 98 of every 100 drops, even from sweat and pee. Nothing is wasted in space.",
+    card: "water",
+  },
+  {
+    prompt: "Why do astronauts exercise about 2 hours every day?",
+    choices: ["To stay warm", "To make power", "To keep bones and muscles strong"],
+    answer: 2,
+    why: "In space, bones and muscles have little work to do, so they get weak. Exercise keeps them strong.",
+    card: "bones",
+  },
+  {
+    prompt: "What did Space Station astronauts grow and eat in 2015?",
+    choices: ["Apples", "Lettuce", "Potatoes"],
+    answer: 1,
+    why: "It was the first time astronauts ate salad grown in space. You grew some too!",
+    card: "veggie",
+  },
+  {
+    prompt: "The Opportunity rover was built to work for 90 sols. How long did it keep going?",
+    choices: ["Almost 15 years", "90 sols exactly", "About 1 year"],
+    answer: 0,
+    why: "It drove on Mars from 2004 to 2018. Good machines, well looked after, can last a very long time.",
+    card: "rover",
   },
 ];
+
+/** The map of the Sun, Earth and Mars. The numbers in it are worked out from real orbits for the day it is opened. */
+export const SPACE = {
+  title: "Where are we in space?",
+  picture: "A map of the Sun in the middle, with Earth and Mars on their paths around it",
+  sun: "The Sun",
+  earth: "Earth",
+  mars: "Mars: you are here",
+  distance: (millionKm: number, minutes: number) => `Mars is ${millionKm} million km from Earth. A radio call takes about ${minutes} minutes to get there.`,
+  today: "Today. Slide to move time forward and watch Earth race ahead.",
+  later: (months: number) => `In ${months} ${months === 1 ? "month" : "months"}.`,
+  launch: (month: string) => `A ship can only set off when Earth and Mars line up just right. That happens about every 26 months. The next good time is around ${month}.`,
+  source: { label: "Orbits: NASA JPL", url: "https://ssd.jpl.nasa.gov/planets/approx_pos.html" },
+} as const;
+
+/** The panel at the weather station, once it has been read. The numbers are real, from engine/weather.ts. */
+export const WEATHER = {
+  title: "Real Mars weather",
+  from: (sol: number, date: string) => `The Curiosity rover measured this on Mars. It was its sol ${sol} there (${date}).`,
+  day: "Warmest, in the day",
+  night: "Coldest, at night",
+  pressure: "Air pressure",
+  thin: "On Earth the air presses more than 100 times as hard.",
+  source: { label: "NASA: the weather station on Curiosity", url: "https://science.nasa.gov/mission/msl-curiosity/science-instruments/" },
+} as const;
+
+/** The words on the certificate a player can print after the final check. */
+export const CERTIFICATE = {
+  title: "Junior Astronaut",
+  line: "finished astronaut training on Mars and kept the base alive for 5 sols.",
+  sign: "Write your name here",
+} as const;

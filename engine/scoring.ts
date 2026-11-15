@@ -1,6 +1,6 @@
 import { CO2_DANGER_PCT, O2_SAFE_MIN_PCT, TEMP_SAFE_MIN_C } from "./constants.ts";
-import { MAX_PARTS, type SimState, UPGRADE_COST } from "./simulate.ts";
-import { FACT_IDS } from "./story.ts";
+import { type FactId, MAX_PARTS, type SimState, UPGRADE_COST } from "./simulate.ts";
+import { FACT_IDS, type Question, QUIZ } from "./story.ts";
 
 export type ReportCard = {
   /** 0 = failed, 1–3 = how safe the base was kept. Thresholds are game rules. */
@@ -33,4 +33,18 @@ export function badges(s: SimState): readonly BadgeId[] {
     maker: s.upgrades.length === Object.keys(UPGRADE_COST).length,
   };
   return (Object.keys(earned) as BadgeId[]).filter((id) => earned[id]);
+}
+
+const QUIZ_LENGTH = 5;
+
+/**
+ * The final check: three main lessons, then two questions about the newest fact
+ * cards this player found. Which lessons come up turns with the number of cards,
+ * so a second mission asks something new. No dice: the same cards give the same check.
+ */
+export function finalCheck(facts: readonly FactId[]): readonly Question[] {
+  const lessons = QUIZ.filter((q) => !q.card);
+  const turned = lessons.map((_, i) => lessons[(i + facts.length) % lessons.length]);
+  const cards = QUIZ.filter((q) => q.card && facts.includes(q.card)).sort((a, b) => facts.indexOf(b.card!) - facts.indexOf(a.card!));
+  return [...turned.slice(0, QUIZ_LENGTH - Math.min(2, cards.length)), ...cards.slice(0, 2)];
 }
