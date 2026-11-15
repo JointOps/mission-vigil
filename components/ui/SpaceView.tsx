@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { AU_KM, AU_LIGHT_MINUTES, earthToMarsAu, EARTH_ORBIT, MARS_ORBIT, nextLaunchDay, type Orbit, planetAt } from "@/engine/orbits";
 import { SPACE } from "@/engine/story";
 
 const DAY_MS = 86_400_000;
 const MONTH_MS = 30.44 * DAY_MS;
+const subscribeNever = () => () => {};
 /** One lap of each orbit as an SVG path, drawn once. North is up, so y is flipped. */
 const lap = (orbit: Orbit, days: number) =>
   `M${Array.from({ length: 72 }, (_, i) => planetAt(orbit, (i * days * DAY_MS) / 72))
@@ -16,6 +17,12 @@ const MARS_LAP = lap(MARS_ORBIT, 687);
 
 /** A map of the Sun, Earth and Mars on a real date. The full map adds a slider to run time forward; `brief` is the picture and one line. */
 export function SpaceView({ brief }: { brief?: boolean }) {
+  // Today's sky depends on the clock, so the map waits for the browser: a page built ahead of time would show an old date.
+  const inBrowser = useSyncExternalStore(subscribeNever, () => true, () => false);
+  return inBrowser ? <SpaceMap brief={brief} /> : null;
+}
+
+function SpaceMap({ brief }: { brief?: boolean }) {
   const [today] = useState(() => Date.now());
   const [months, setMonths] = useState(0);
   const when = today + months * MONTH_MS;
