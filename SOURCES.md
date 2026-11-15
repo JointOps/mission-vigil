@@ -39,6 +39,11 @@
 | Orbits of Earth and Mars (space map): Keplerian elements for 1800 to 2050 | Standish and Williams, via NASA JPL: https://ssd.jpl.nasa.gov/planets/approx_pos.html |
 | Astronomical unit 149,597,870.7 km; speed of light 299,792.458 km/s | NASA JPL: https://ssd.jpl.nasa.gov/astro_par.html |
 | Mars weather at the weather station: 30 sols of air temperature and pressure from Curiosity's REMS station (sols 4966 to 4995, copied 2026-11-15 into `engine/weather.ts`) | Feed: https://mars.nasa.gov/rss/api/?feed=weather&category=msl&feedtype=json · Instrument: https://science.nasa.gov/mission/msl-curiosity/science-instruments/ · Data credit NASA/JPL-Caltech/CAB (CSIC-INTA); the feed says it is for outreach use, and points to the PDS for science use |
+| Earth and the Moon look like two bright "evening stars" from Mars; Curiosity photographed them on sol 529 (31 January 2014) | NASA/JPL PIA17936: https://www.jpl.nasa.gov/images/pia17936-bright-evening-star-seen-from-mars-is-earth/ |
+| Phobos orbits faster than Mars turns, so from the ground it rises in the west and sets in the east | ESA Mars Express: https://sci.esa.int/web/mars-express/-/31031-phobos |
+| Deimos measures about 15 × 12 × 11 km | NASA: https://science.nasa.gov/mars/moons/deimos/ |
+| About 1,000 Earths could fit inside Jupiter | NASA: https://science.nasa.gov/jupiter/jupiter-facts/ |
+| Galileo first saw Jupiter's four largest moons in January 1610 | NASA/JPL: https://www.jpl.nasa.gov/videos/whats-up-february-2010-galileos-first-telescopic-view-of-jupiter |
 | The solar storm of August 1972 fell between Apollo 16 and Apollo 17 and would have been dangerous to astronauts on the Moon | NASA SVS, "How NASA Will Protect Astronauts From Space Radiation": https://svs.gsfc.nasa.gov/13275 |
 
 **Name check:** Steam games "Vigil" (horror) and "Vigil: The Longest Night" (fantasy) exist. We always use the full title "MISSION VIGIL: Junior Astronaut Mission Trainer."
