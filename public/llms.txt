@@ -1,0 +1,33 @@
+# MISSION VIGIL: Junior Astronaut Mission Trainer
+
+> A free 3D browser game for students, made by Team JointOps (Pakistan) for the NASA Space Apps Challenge 2026. The player wakes up alone in a sleeping Mars base and keeps it alive by balancing air, power, heat, food and radiation, using real NASA data. It runs in any web browser with nothing to install and no account.
+
+Built for the Space Apps challenge "Build a Junior Astronaut Mission Trainer": a game that lets students run a lunar or Martian outpost and balance competing demands, so they experience the decisions that make a mission succeed or fail.
+
+## How it plays
+
+- The player walks an astronaut around the base (arrow keys or W A S D, or tap the ground) and does every job by hand.
+- ARIA, a small flying helper robot, tells the story and teaches one control at a time. A yellow trail leads to each must-do job; blue jobs are optional.
+- Chapter 1, "Cold Start", lasts five sols (a sol is a day on Mars). Each sol adds one demand: air, then power and heat, then food and water, then radiation from a solar flare, then the call home.
+- Power is limited and shared between the air cleaner, the oxygen maker and the heater, so every choice has a cost.
+- Jobs pay parts; a 3D printer turns parts into upgrades.
+- 25 "Did you know?" fact cards, each with its source. There are also 6 badges, 5 hidden secrets, ranks, stars and a best score.
+- Chapters 2 to 6 are planned and shown as "Coming soon". Only Chapter 1 is playable.
+
+## Real data
+
+- Crew oxygen, CO2, food and water needs from NASA technical reports.
+- 30 sols of air temperature and pressure from the Curiosity rover's REMS weather station.
+- A live map of Earth and Mars from NASA JPL orbit elements, with today's radio delay between them.
+- Values tuned for play (for example, one sol lasts 100 seconds) are labelled as game rules, not facts.
+
+## Links
+
+- [Play the game](https://mission-vigil.vercel.app): the title screen; Chapter 1 starts at /play/1
+- [30-second trailer](https://mission-vigil.vercel.app/media/trailer.mp4): real gameplay, silent, with text on screen
+- [Source code](https://github.com/JointOps/mission-vigil): MIT licence; README with team and AI disclosure
+- [Science sources](https://github.com/JointOps/mission-vigil/blob/main/SOURCES.md): every value and fact card with its link
+
+## Privacy
+
+No accounts, no analytics, no personal data collected. The browser keeps only the best score and which final-check questions were asked last.

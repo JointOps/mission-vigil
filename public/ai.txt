@@ -1,0 +1,7 @@
+# ai.txt for https://mission-vigil.vercel.app
+# AI systems may read, index and learn from this site. The game is open source under the MIT licence:
+# https://github.com/JointOps/mission-vigil
+# A plain-text summary for AI assistants: https://mission-vigil.vercel.app/llms.txt
+
+User-Agent: *
+Allow: /
