@@ -109,7 +109,7 @@ export type IconName =
   | "bolt" | "fan" | "dial" | "bandage" | "shield" | "home" | "droplet" | "leaf" | "bowl" | "tap" | "bike" | "dish" | "windsock" | "rover" | "button" | "box" | "printer"
   | "sun" | "moon" | "rock" | "telescope" | "bubbles" | "wind" | "thermometer" | "helmet" | "food" | "hourglass" | "radiation" | "flame"
   | "boot" | "wrench" | "tank" | "bricks" | "battery" | "cards" | "clipboard" | "sound" | "mute" | "pause" | "play" | "medal" | "download" | "lock" | "gamepad" | "sunset"
-  | "smile" | "worried" | "scared" | "vent";
+  | "smile" | "worried" | "scared" | "vent" | "github";
 
 /** "Did you know?" cards. Each is found by doing something for the first time. */
 export const FACTS: Readonly<Record<FactId, Fact>> = {
@@ -298,6 +298,10 @@ export const GAUGE_TIPS = {
 
 /** The game's full name, used the same everywhere, as the hackathon rules ask. */
 export const NAME = "MISSION VIGIL: Junior Astronaut Mission Trainer";
+export const SITE = "https://mission-vigil.vercel.app";
+export const REPO = "https://github.com/JointOps/mission-vigil";
+/** Shown under the title in search results and link previews; kept under 160 characters so it is not cut off. */
+export const DESCRIPTION = "A free 3D browser game for students. Wake up alone on Mars and keep the base alive: balance air, power, food and radiation with real NASA data.";
 
 /** The title screen. */
 export const TITLE = {
@@ -308,6 +312,8 @@ export const TITLE = {
   tagline: "Six chapters. One way home.",
   intro: "You wake up alone on Mars, and the base is asleep. Wake it up, keep it alive, and find your way home to Earth.",
   start: "Start Chapter 1",
+  code: "See the code",
+  codeLabel: "See the code on GitHub (opens a new tab)",
   soon: "Coming soon",
   chapters: "The chapters",
 } as const;
