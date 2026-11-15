@@ -94,9 +94,14 @@ function walkable(p: Point): boolean {
   return !inHull && !inLockWalls && Math.hypot(p.x, p.z) < EDGE;
 }
 
-/** Move by (dx, dz), sliding along a wall when the straight step is blocked. */
+/**
+ * Move by (dx, dz), sliding along a wall when the straight step is blocked.
+ * A slide of under a fifth of the step counts as blocked, and returns `p` itself:
+ * pushing almost straight at a wall would otherwise creep along it forever.
+ */
 export function walk(p: Point, dx: number, dz: number): Point {
-  for (const q of [{ x: p.x + dx, z: p.z + dz }, { x: p.x + dx, z: p.z }, { x: p.x, z: p.z + dz }]) if (walkable(q)) return q;
+  const step = Math.hypot(dx, dz);
+  for (const q of [{ x: p.x + dx, z: p.z + dz }, { x: p.x + dx, z: p.z }, { x: p.x, z: p.z + dz }]) if (walkable(q) && Math.hypot(q.x - p.x, q.z - p.z) >= step * 0.2) return q;
   return p;
 }
 

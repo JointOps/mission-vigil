@@ -20,6 +20,7 @@ const CHEST_LIGHT = glow("#86d6b0", 2);
 const HEAD_LAMP = glow("#fff4d6", 0);
 const MAIN_MARK = glow("#f2c230", 2.5);
 const SIDE_MARK = glow("#8ec5f0", 2);
+const MARK = new THREE.OctahedronGeometry(1, 0);
 
 const DOTS = 72;
 const DOT_GAP = 0.6;
@@ -180,9 +181,7 @@ export function Crew({ demo }: Props) {
       {!demo && <primitive object={TRAIL} />}
       <group ref={markers}>
         {STATION_IDS.map((id) => (
-          <mesh key={id} position={[STATIONS[id].x, 2.7, STATIONS[id].z]} scale={[0.2, 0.3, 0.2]} material={MAIN_MARK} visible={false}>
-            <octahedronGeometry args={[1, 0]} />
-          </mesh>
+          <mesh key={id} geometry={MARK} position={[STATIONS[id].x, 2.7, STATIONS[id].z]} scale={[0.2, 0.3, 0.2]} material={MAIN_MARK} visible={false} />
         ))}
       </group>
     </>

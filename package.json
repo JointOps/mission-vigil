@@ -11,7 +11,6 @@
     "test": "node --test \"engine/*.test.ts\""
   },
   "dependencies": {
-    "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",
     "next": "16.4.6",
     "react": "^19.3.1",
@@ -30,5 +29,10 @@
     "eslint-config-next": "16.4.6",
     "tailwindcss": "4.3.3",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.1"
+    }
   }
 }
