@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { badges, finalCheck, reportCard } from "./scoring.ts";
-import { type Area, buy, co2Pct, EVENTS, FLARE, initialState, isCold, isOver, isStorm, type Job, jobs, MAX_PARTS, o2Pct, powerAt, reserveSols, seen, setCells, type SimState, step, take, TUTORIAL_DONE, UPGRADE_COST } from "./simulate.ts";
+import { type Area, buy, co2Pct, EVENTS, FLARE, initialState, isCold, isOver, isStorm, type Job, jobs, MAX_PARTS, o2Pct, powerAt, reserveSols, seen, setCells, type SimState, spotEarth, step, take, TUTORIAL_DONE, UPGRADE_COST } from "./simulate.ts";
 import { areaOf, type Point, route, START, STATIONS, stationNear, walk } from "./world.ts";
 
 const TICK = 0.1;
@@ -253,4 +253,19 @@ test("the final check asks five questions, and only about fact cards the player 
   assert.deepEqual(more.slice(3).map((q) => q.card), ["gather", "water"]);
   assert.equal(new Set(more).size, 5);
   assert.notDeepEqual(more.slice(0, 3), few.slice(0, 3), "another mission, other questions");
+});
+
+test("the hidden telescope finds the secret card once, and no job ever points to it", () => {
+  const s = spotEarth(initialState());
+  assert.ok(s.facts.includes("earthstar"));
+  assert.equal(spotEarth(s), s, "a second look finds nothing new");
+  assert.ok(jobs(s).every((j) => j.at !== "telescope"), "no trail or marker gives the secret away");
+  assert.equal(stationNear(STATIONS.telescope), "telescope");
+});
+
+test("the clock and the suit air stand still while you look through the telescope", () => {
+  const s = { ...initialState(), stage: TUTORIAL_DONE };
+  const outside = step(s, { area: "outside", near: null, working: false }, 5);
+  assert.ok(outside.sol > s.sol && outside.suit < s.suit, "away from the telescope, time and air run on");
+  assert.equal(step(outside, { area: "outside", near: "telescope", working: false }, 30), outside);
 });

@@ -44,6 +44,8 @@ export const STATIONS: Readonly<Record<StationId, Point>> = {
   rock0: { x: 12.5, z: 3.5 },
   rock1: { x: 8.2, z: 6.4 },
   rock2: { x: -9.5, z: 2 },
+  // Hidden on purpose, behind the rover: no job, no marker, no trail. Found only by walking around.
+  telescope: { x: 17.4, z: 4.2 },
 };
 /** Stations with something to use. The shelter is only a place to go, so it must not catch taps or prompts. */
 const USABLE = (Object.keys(STATIONS) as StationId[]).filter((id) => id !== "shelter");
@@ -57,7 +59,8 @@ export const TANKS: Rect = { x0: -5.6, x1: -0.4, z0: -5.5, z1: -3.7 };
 export const DISH: Rect = { x0: 10.6, x1: 12.4, z0: -5.6, z1: -3.7 };
 export const ROVER: Rect = { x0: 12.8, x1: 16.2, z0: 5.4, z1: 7.6 };
 export const MAST: Rect = { x0: -11.6, x1: -10.8, z0: -3.7, z1: -2.9 };
-const OBSTACLES: readonly Rect[] = [BUNK, TANKS, DISH, ROVER, MAST, ...PANEL_X.map((x) => ({ x0: x - 1.5, x1: x + 1.5, z0: 5.9, z1: 7.7 }))];
+export const TELESCOPE: Rect = { x0: 17.85, x1: 19.05, z0: 3.4, z1: 4.9 };
+const OBSTACLES: readonly Rect[] = [BUNK, TANKS, DISH, ROVER, MAST, TELESCOPE, ...PANEL_X.map((x) => ({ x0: x - 1.5, x1: x + 1.5, z0: 5.9, z1: 7.7 }))];
 
 /** How close the astronaut must stand to use a station. */
 const REACH = 1.2;

@@ -4,7 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import * as THREE from "three";
 import { co2Pct, co2Zone, isStorm, o2Pct, o2Zone, PANELS, powerAt, ROCKS, seen, tempZone, type Upgrade } from "@/engine/simulate";
-import { areaOf, BUNK, DISH, GARDEN_X, HULL, LOCK, MAST, PANEL_X, ROVER, STATIONS, TANKS } from "@/engine/world";
+import { areaOf, BUNK, DISH, GARDEN_X, HULL, LOCK, MAST, PANEL_X, ROVER, STATIONS, TANKS, TELESCOPE } from "@/engine/world";
 import { useGame } from "@/store/game";
 import { BALL, Ball, Box, BOX, Cyl, flat, glow, M } from "./parts";
 
@@ -32,6 +32,10 @@ const ROVER_EYE = glow("#8ec5f0", 0.3);
 const HEATER_FIN = glow("#ff8a3c");
 const WATER_LAMP = glow("#f2c230");
 const WEATHER_LAMP = glow("#86d6b0");
+/** The hidden telescope: its lens catches the sky, and a red lamp keeps night eyes sharp, as real stargazers use. */
+const LENS = glow("#9fd3ee", 0.6);
+const RED_LAMP = glow("#ff4a3a", 1.4);
+const STAR_CHART = flat("#24324f");
 const WET_SOIL = flat("#2a170e", 1);
 const DISH_SHELL = new THREE.MeshStandardMaterial({ color: "#e9dfcf", roughness: 0.8, flatShading: true, side: THREE.DoubleSide });
 /** Power box lights: in use, waiting to be plugged in, lost to dust. */
@@ -47,6 +51,7 @@ const [TANK_X, TANK_Z] = centre(TANKS);
 const [DISH_X, DISH_Z] = centre(DISH);
 const [ROVER_X, ROVER_Z] = centre(ROVER);
 const [MAST_X, MAST_Z] = centre(MAST);
+const [SCOPE_X, SCOPE_Z] = centre(TELESCOPE);
 /** The machines stand against the north wall, just beyond where the astronaut can walk. */
 const NORTH = -2.93;
 const SOUTH = 2.95;
@@ -493,6 +498,49 @@ export function Base({ demo }: Props) {
             ))}
           </group>
         ))}
+      </group>
+
+      {/* The hidden telescope behind the rover, aimed up at the evening sky. The eyepiece faces west, where the astronaut stands. */}
+      <group position={[SCOPE_X, 0, SCOPE_Z]}>
+        {/* Tripod: three legs from the head out to rubber feet */}
+        {[0, 1, 2].map((i) => (
+          <group key={i} rotation={[0, (i * Math.PI * 2) / 3, 0]}>
+            <Cyl p={[0.275, 0.5, 0]} r={[0, 0, 0.5]} s={[0.025, 1.14, 0.025]} m={M.metal} shadow />
+            <Ball p={[0.55, 0.03, 0]} s={[0.06, 0.03, 0.06]} m={M.rubber} />
+          </group>
+        ))}
+        {/* Tray between the legs: spare eyepieces and the red lamp */}
+        <Cyl p={[0, 0.45, 0]} s={[0.28, 0.02, 0.28]} m={M.dark} />
+        <Cyl p={[0.08, 0.5, 0.06]} s={[0.035, 0.08, 0.035]} m={M.rubber} />
+        <Cyl p={[0.02, 0.5, -0.1]} s={[0.03, 0.07, 0.03]} m={M.metal} />
+        <Ball p={[-0.1, 0.5, 0.05]} s={0.04} m={RED_LAMP} />
+        {/* Mount head and the counterweight that balances the tube */}
+        <Box p={[0, 1.06, 0]} s={[0.18, 0.14, 0.18]} m={M.dark} />
+        <Box p={[0, 1.18, 0]} s={[0.08, 0.14, 0.2]} m={M.metal} />
+        <group position={[0, 1.25, 0]} rotation={[0, 0.5, -0.95]}>
+          <Cyl p={[-0.2, 0, 0]} r={[0, 0, Math.PI / 2]} s={[0.015, 0.35, 0.015]} m={M.metal} />
+          <Cyl p={[-0.38, 0, 0]} r={[0, 0, Math.PI / 2]} s={[0.07, 0.08, 0.07]} m={M.dark} />
+          {/* Tube, dew shield, lens and trim rings */}
+          <Cyl p={[0, 0.2, 0]} s={[0.11, 1.2, 0.11]} m={M.hull} shadow />
+          <Cyl p={[0, -0.2, 0]} s={[0.117, 0.05, 0.117]} m={M.trim} />
+          <Cyl p={[0, 0.5, 0]} s={[0.117, 0.05, 0.117]} m={M.trim} />
+          <Cyl p={[0, 0.86, 0]} s={[0.13, 0.25, 0.13]} m={M.dark} />
+          <Cyl p={[0, 0.96, 0]} s={[0.11, 0.01, 0.11]} m={LENS} />
+          {/* Focuser and the eyepiece, bent sideways so a helmet fits */}
+          <Cyl p={[0, -0.44, 0]} s={[0.08, 0.08, 0.08]} m={M.dark} />
+          <Cyl p={[0, -0.53, 0]} s={[0.04, 0.12, 0.04]} m={M.metal} />
+          <Cyl p={[-0.08, -0.58, 0]} r={[0, 0, Math.PI / 2]} s={[0.035, 0.14, 0.035]} m={M.rubber} />
+          {/* Little finder scope on top, on two brackets */}
+          <Cyl p={[0.17, 0.25, 0]} s={[0.035, 0.4, 0.035]} m={M.dark} />
+          <Box p={[0.13, 0.12, 0]} s={[0.06, 0.03, 0.04]} m={M.metal} />
+          <Box p={[0.13, 0.38, 0]} s={[0.06, 0.03, 0.04]} m={M.metal} />
+        </group>
+        {/* A stool with a mug and a star chart: someone came out here to watch the sky */}
+        <Cyl p={[0.35, 0.02, 0.55]} s={[0.13, 0.03, 0.13]} m={M.dark} />
+        <Cyl p={[0.35, 0.21, 0.55]} s={[0.03, 0.4, 0.03]} m={M.metal} />
+        <Cyl p={[0.35, 0.42, 0.55]} s={[0.16, 0.04, 0.16]} m={M.trim} />
+        <Cyl p={[0.29, 0.49, 0.5]} s={[0.04, 0.09, 0.04]} m={M.blue} />
+        <Box p={[0.42, 0.455, 0.6]} r={[0, 0.4, 0]} s={[0.14, 0.03, 0.1]} m={STAR_CHART} />
       </group>
 
       {/* The lander that brought you, far off */}

@@ -46,7 +46,7 @@ export type System = "scrubber" | "oxygen" | "heater";
 export type Allocation = Readonly<Record<System, number>>;
 /** Hands-on jobs, each named after the station it is done at. */
 export type Task = "power" | "scrubber" | "gauge" | "leak" | "bags" | "plant" | "salad" | "recycler" | "bike" | "antenna" | "weather" | "rover" | "console" | (typeof PANELS)[number] | (typeof ROCKS)[number];
-export type StationId = Task | "storage" | "printer" | "shelter";
+export type StationId = Task | "storage" | "printer" | "shelter" | "telescope";
 export type Area = "inside" | "airlock" | "outside";
 export type Item = "filter" | "patch";
 export type Upgrade = "boots" | "tools" | "tank" | "walls" | "battery";
@@ -77,7 +77,8 @@ export type FactId =
   | "flare"
   | "aurora"
   | "gather"
-  | "shelter";
+  | "shelter"
+  | "earthstar";
 
 /** What the astronaut is doing during a step. */
 export type Input = {
@@ -352,6 +353,11 @@ export function setCells(s: SimState, system: System, cells: number): SimState {
   return { ...s, alloc: { ...s.alloc, [system]: Math.max(0, Math.min(cells, MAX_CELLS[system], room)) } };
 }
 
+/** The hidden telescope: the first time Earth is in its sights, the secret fact card is found. */
+export function spotEarth(s: SimState): SimState {
+  return s.facts.includes("earthstar") ? s : { ...s, facts: [...s.facts, "earthstar"] };
+}
+
 /** Pick up from the shelf whichever spare part is needed, the air cleaner's first. */
 export function take(s: SimState): SimState {
   const item = s.work.scrubber > 0 ? "filter" : s.work.leak > 0 ? "patch" : null;
@@ -397,7 +403,8 @@ type Draft = { -readonly [K in keyof SimState]: SimState[K] };
 
 /** Advance the game by `seconds` of play. Pure: returns a new state. */
 export function step(s: SimState, input: Input, seconds: number): SimState {
-  if (isOver(s)) return s;
+  // Time stands still at the hidden telescope: curiosity should never cost air or a sol.
+  if (isOver(s) || input.near === "telescope") return s;
   const d: Draft = { ...s };
   const say = (message: MessageId) => {
     d.message = message;

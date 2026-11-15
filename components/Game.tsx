@@ -5,7 +5,8 @@ import { sfx } from "@/components/sound";
 import { Outpost } from "@/components/three/Outpost";
 import { Debrief } from "@/components/ui/Debrief";
 import { Controls, Hud } from "@/components/ui/Hud";
-import { jobs } from "@/engine/simulate";
+import { type Failure, jobs } from "@/engine/simulate";
+import { FACT_IDS, FAILURES } from "@/engine/story";
 import { useGame } from "@/store/game";
 
 /** Walking keys and the direction each one pushes: x is east, z is south. */
@@ -77,7 +78,15 @@ export function Game() {
     });
 
     // In development the store and the job list are on `window`, for the play-through script and for poking from the console.
-    if (process.env.NODE_ENV !== "production") Object.assign(window, { vigil: useGame, vigilJobs: jobs });
+    // `?end=win`, or a failure such as `?end=cold`, jumps straight to the end screen to check it without playing.
+    // The production build replaces NODE_ENV and drops this whole block.
+    if (process.env.NODE_ENV !== "production") {
+      Object.assign(window, { vigil: useGame, vigilJobs: jobs });
+      const end = new URLSearchParams(location.search).get("end");
+      const sim = useGame.getState().sim;
+      if (end === "win") useGame.setState({ sim: { ...sim, won: true, sol: 5, safeSols: 3, earned: 970, facts: FACT_IDS.slice(0, 17) } });
+      else if (end && end in FAILURES) useGame.setState({ sim: { ...sim, failure: end as Failure } });
+    }
 
     window.addEventListener("keydown", onKey);
     window.addEventListener("keyup", onKey);

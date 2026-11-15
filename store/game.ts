@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { type Area, buy, initialState, isOver, isStarving, jobs, setCells, type SimState, type StationId, step, type System, take, type Upgrade } from "@/engine/simulate";
+import { type Area, buy, initialState, isOver, isStarving, jobs, setCells, type SimState, spotEarth, type StationId, step, type System, take, type Upgrade } from "@/engine/simulate";
 import { MESSAGES } from "@/engine/story";
 import { areaOf, type Point, route, START, STATIONS, stationNear, walk } from "@/engine/world";
 
@@ -37,6 +37,8 @@ export type GameState = Snapshot & {
   interact(): void;
   setCells(system: System, cells: number): void;
   buy(upgrade: Upgrade): void;
+  /** Earth is in the hidden telescope's sights. */
+  spotEarth(): void;
   togglePause(): void;
   toggleMute(): void;
   rewind(): void;
@@ -144,6 +146,11 @@ export const useGame = create<GameState>((set, get) => ({
   buy(upgrade) {
     const state = get();
     if (isPlaying(state) && state.near === "printer") set({ sim: buy(state.sim, upgrade) });
+  },
+
+  spotEarth() {
+    const state = get();
+    if (isPlaying(state) && state.near === "telescope") set({ sim: spotEarth(state.sim) });
   },
 
   togglePause: () => set({ paused: !get().paused }),

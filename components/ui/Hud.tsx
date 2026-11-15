@@ -35,6 +35,7 @@ import { MARS_WEATHER } from "@/engine/weather";
 import { areaOf } from "@/engine/world";
 import { isPlaying, useGame } from "@/store/game";
 import { SpaceView } from "./SpaceView";
+import { Telescope } from "./Telescope";
 
 // Every selector below rounds what it reads, so a component re-renders only
 // when the number it shows changes, not on every simulation frame.
@@ -563,7 +564,9 @@ function FactCard() {
   const id = useGame((s) => s.sim.facts.at(-1));
   // One thing at a time: the card waits until ARIA has finished talking.
   const talking = useGame((s) => s.line !== null);
-  if (!id) return null;
+  // At the end the win cards show every fact, so a late card would only sit behind them.
+  const over = useGame((s) => s.sim.won || s.sim.failure !== null);
+  if (!id || over) return null;
   return (
     <aside key={count} className={`${PANEL} toast pointer-events-none! ${talking ? "invisible [animation-play-state:paused]" : ""} border-sulfur/60 p-3 md:absolute md:top-20 md:left-1/2 md:w-[28rem] md:-translate-x-1/2`} role="status">
       <p className="flex justify-between font-display text-sulfur">
@@ -701,6 +704,7 @@ export function Controls() {
       <PowerBox />
       <Printer />
       <Weather />
+      <Telescope />
     </div>
   );
 }

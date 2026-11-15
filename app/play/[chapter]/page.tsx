@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Game } from "@/components/Game";
 
-// The whole mission is one chapter of five sols (see SOLS in engine/story.ts).
+// Only Chapter 1 is built; the title screen shows the others as coming soon (see CHAPTERS in engine/story.ts).
 const playable = ["1"];
 
 export function generateStaticParams() {
