@@ -20,7 +20,7 @@
 | Martian sunsets are blue near the sun (title screen sky) | https://www.jpl.nasa.gov/news/nasas-curiosity-rover-views-serene-sundown-on-mars/ |
 | Dust on solar panels ended the InSight lander's mission (2022) | https://www.nasa.gov/missions/insight/nasa-retires-insight-mars-lander-mission-after-years-of-science/ |
 | Mars air is about 95% CO₂ at under 1% of Earth's surface pressure | NASA Mars Fact Sheet: https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html |
-| A NASA spacesuit carries about 7 hours of oxygen plus a 30-minute emergency supply | https://ntrs.nasa.gov/citations/20140000238 · https://oig.nasa.gov/docs/IG-17-018.pdf — **found through search summaries only; open the PDFs and confirm the page before submitting** |
+| A NASA spacesuit (EMU) supports a spacewalk of up to 7 hours, and its Secondary Oxygen Package gives at least 30 minutes of emergency oxygen | Moore and Marmolejo, *EVA Hardware and Operations Overview* (NASA NTRS 20140000238), slide 11 (7 hours) and slide 16 (30 minutes): https://ntrs.nasa.gov/citations/20140000238 |
 | Astronauts first ate lettuce grown on the Space Station in August 2015 | https://www.nasa.gov/exploration-research-and-technology/growing-plants-in-space/ |
 | A radio message between Mars and Earth takes about 4 to 22 minutes | https://mars.nasa.gov/mgs/faqs/faq_mplan.html · https://ntrs.nasa.gov/citations/20220013418 |
 | Perseverance seals rock cores in tubes for a possible return to Earth | https://www.nasa.gov/missions/mars-2020-perseverance/perseverance-rover/a-martian-roundtrip-nasas-perseverance-rover-sample-tubes/ |
@@ -76,4 +76,6 @@ Rule: any value not sourced is labeled *(game)* in code and on screen. Nothing u
 | Big Shoulders, Big Shoulders Stencil (fonts) | SIL Open Font License 1.1 | Google Fonts, loaded through `next/font` |
 | Atkinson Hyperlegible Next (font) | SIL Open Font License 1.1 | Braille Institute, via Google Fonts |
 
-The 3D scene is procedural: no models, textures, images or audio files. List licences and attribution here before adding any.
+| README screenshots (`public/media/*.jpg`) and share image (`app/opengraph-image.jpg`) | Our own work, MIT | Captured from the running game in headless Chrome |
+
+The game itself is procedural: no models, textures, images or audio files. List licences and attribution here before adding any.

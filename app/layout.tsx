@@ -10,9 +10,15 @@ const body = Atkinson_Hyperlegible_Next({ subsets: ["latin"], variable: "--ff-bo
 const display = Big_Shoulders({ subsets: ["latin"], variable: "--ff-display", adjustFontFallback: false });
 const stencil = Big_Shoulders_Stencil({ subsets: ["latin"], variable: "--ff-stencil", adjustFontFallback: false });
 
+const description = "Wake up alone in a Mars outpost and keep it alive. A mission trainer built on NASA research.";
+
+// The share image is app/opengraph-image.jpg; metadataBase makes its URL absolute.
 export const metadata: Metadata = {
+  metadataBase: new URL("https://mission-vigil.vercel.app"),
   title: NAME,
-  description: "Wake up alone in a Mars outpost and keep it alive. A mission trainer built on NASA research.",
+  description,
+  openGraph: { title: NAME, description },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -1,11 +1,12 @@
-# MISSION VIGIL
-### Junior Astronaut Mission Trainer
+# MISSION VIGIL: Junior Astronaut Mission Trainer
 
 **The base is asleep. The air is going bad. You have five sols to keep it alive.**
 
 [▶ Play the mission](https://mission-vigil.vercel.app) · [Science & sources](SOURCES.md) · [Meet the team](#team-jointops) · [Run locally](#run-locally)
 
-A browser-based survival game by **Team JointOps, Pakistan**, for the **NASA Space Apps Challenge 2026**. Players walk an astronaut through a Martian outpost, restore its systems, and learn how one resource decision can affect the rest of the mission. No account is required.
+![The MISSION VIGIL title screen: a small Mars base at sunset, a live map of Earth and Mars, and six chapters](public/media/title.jpg)
+
+A browser game by **Team JointOps, Pakistan**, for the **NASA Space Apps Challenge 2026**. Players walk an astronaut through a Martian outpost, wake its systems one by one, and learn how one resource decision affects the rest of the mission. It runs in a web browser with nothing to install and no account.
 
 ---
 
@@ -13,9 +14,13 @@ A browser-based survival game by **Team JointOps, Pakistan**, for the **NASA Spa
 
 > Build a Junior Astronaut Mission Trainer — an interactive game or app that lets students run a lunar or Martian outpost, balancing competing demands like life support, radiation shielding, power, and food production, so they experience firsthand the decisions that determine whether a mission fails or succeeds.
 
-## Five sols. One interconnected base.
+## Six chapters. One way home.
 
-A **sol** is a day on Mars. Each day introduces another demand while earlier systems still need attention.
+The story runs from a sleeping base on Mars to splashdown on Earth. **Chapter 1, *Cold Start*, is playable now.** Chapters 2 to 6 (*Red Blizzard*, *Clear the Pad*, *Thin Air*, *Escape Velocity* and *Splashdown*) are on the title screen as "Coming soon".
+
+### Chapter 1: Cold Start, in five sols
+
+A **sol** is a day on Mars. Each sol adds one new demand, and the earlier systems still need care.
 
 | Sol | Mission | What the player balances |
 | :--- | :--- | :--- |
@@ -25,29 +30,47 @@ A **sol** is a day on Mars. Each day introduces another demand while earlier sys
 | **04 · Hold for Flare** | Respond to a solar flare | Shelter, radiation, and a habitat leak |
 | **05 · Go for Home** | Call home | Communications and the systems keeping the base alive |
 
-Explore the outpost, follow ARIA’s guidance, earn parts from tasks, and use the 3D printer to buy upgrades. Daily chores come back every morning, as they do for real crews. Each first-time job unlocks a “Did you know?” fact card with its source, and a “?” window answers the big questions (what a sol is, why CO₂ matters, how far away Earth is) at any time.
+| | |
+| :---: | :---: |
+| ![The guided start: ARIA the helper robot, the power box, and a "Did you know?" card about the length of a sol](public/media/guided-start.jpg) | ![Outside in a spacesuit, cleaning dust off the solar panels at sunrise](public/media/solar-panels.jpg) |
+| A guided start teaches one control at a time | Clean the solar panels before the suit air runs out |
+| ![A solar flare: the warning "Solar flare! Stay inside." and a radiation gauge](public/media/solar-flare.jpg) | |
+| Shelter from a solar flare | |
 
-Real data runs through the game: the weather station shows recent sols measured by the Curiosity rover, and a map shows where Earth and Mars are today and how long a radio message takes. Hidden secrets reward curious players.
+ARIA, a small flying helper robot, tells the story and guides the player. A yellow trail leads to each must-do job. Blue jobs are optional. Jobs pay parts, and the 3D printer turns parts into upgrades. Daily chores come back every morning, as they do for real crews. A "?" window answers the big questions at any time: what a sol is, why CO₂ matters, how far away Earth is.
 
-At the end, players answer a short check from Earth, see their stars, rank, badges and collection, and can save a postcard from Mars and print a certificate. Time, event severity, and selected thresholds are compressed or tuned for play, and are identified as game rules in [SOURCES.md](SOURCES.md).
+**Learning and replay:** 25 "Did you know?" fact cards, each with its source. One of them is secret. There are also 6 badges, 5 hidden secrets for curious players, a rank, stars and a best score.
+
+**Real data in the game:** the weather station shows 30 recent sols measured by the Curiosity rover. A live map shows where Earth and Mars are today and how long a radio message takes between them.
+
+**The ending:** after a win, the player gets their stars and mission stats, then a short final check from Earth, then their badge and card collection. They can also save a postcard from Mars and print a certificate. The game gives time, event strength and some limits a game value so it plays well. [SOURCES.md](SOURCES.md) labels these as game rules.
+
+## NASA data and resources we use
+
+- **Curiosity rover REMS weather:** 30 sols of air temperature and pressure (NASA/JPL-Caltech/CAB), shown at the weather station.
+- **NASA JPL orbit elements and constants:** used to place Earth and Mars on the live map and to work out the radio delay.
+- **NASA technical reports (NTRS):** crew oxygen, CO₂, food and water needs, CO₂ limits, spacesuit oxygen, and how the Space Station crew responds to an emergency.
+- **NASA mission results:** MOXIE, InSight, Spirit, Opportunity, Perseverance, the Space Station (water recycling, the 3D printer, growing lettuce, exercise), Orion's radiation shelter, and the NASA Mars Fact Sheet.
+
+Every value and fact card is listed with its link in [SOURCES.md](SOURCES.md).
 
 ## Try it
 
 **[Launch MISSION VIGIL →](https://mission-vigil.vercel.app)**
 
-- **Keyboard:** arrow keys or WASD to move; E, Space, or Enter to interact and advance dialogue; P or Escape to pause.
-- **Touch:** tap the ground to move and tap a machine to interact. On a phone, tap a gauge chip to open it.
-- Follow the guided introduction and the yellow trail to the next task. Blue markers indicate optional jobs.
+- **Keyboard:** arrow keys or WASD to move. E, Space or Enter to use a machine and to read on. P or Escape to pause.
+- **Touch:** tap the ground to move, and tap a machine to use it. On a phone, tap a gauge to open it.
+- Follow the guided start and the yellow trail to the next job. Blue markers show optional jobs.
 
-The game stores a best score in the browser’s local storage. The name typed on the postcard stays on the page and is never stored or sent. It has no accounts or analytics and does not collect personal data.
+The game keeps one thing in the browser's local storage: the best score. The name typed on the postcard stays on the page and is never stored or sent. There are no accounts or analytics, and the game collects no personal data.
 
 ## How it works
 
-The interface and 3D scene are built with **Next.js, React, TypeScript, Three.js, React Three Fiber, and Tailwind CSS**. A plain TypeScript simulation models the systems; **Zustand** connects that simulation to the player interface. The scene is procedural and uses no external 3D models or textures, the icons are hand-drawn SVG, and every sound is synthesised with the Web Audio API, so there are no image or audio files.
+The interface and 3D scene are built with **Next.js, React, TypeScript, Three.js, React Three Fiber, and Tailwind CSS**. A plain TypeScript simulation models the systems, and **Zustand** connects it to the interface. The game uses no image, model, texture or audio files: the scene is procedural, the icons are hand-drawn SVG, and every sound is made with the Web Audio API. The screenshots in this README are captures of the game.
 
-The 3D scene loads after the page, behind a short loading screen, so the controls work while it arrives. It holds 60 fps and keeps React updates to a handful per second.
+The 3D scene loads after the page, behind a short loading screen, so the controls work while it arrives. In our tests it held 60 frames per second mid-game, even with Chrome slowing the processor to a quarter of its speed, and the page changed about 20 times a second. We have not yet tested it on a low-end graphics chip.
 
-The simulation distinguishes sourced values from game rules. See [SOURCES.md](SOURCES.md) for research and asset licences.
+The simulation keeps sourced values apart from game rules. See [SOURCES.md](SOURCES.md) for research and asset licences.
 
 ## Run locally
 
@@ -73,16 +96,16 @@ Team JointOps is based in Pakistan. Handles are Space Apps handles, not GitHub u
 
 | Member | Space Apps handle | Role |
 | :--- | :--- | :--- |
-| Shayan Hussain · Team Owner | @rockstarsb | Backend architecture and integration |
-| AbdulMoiz Yousuf | @moizyousuf | Frontend lead |
-| Owais Iqbal | @owaistar | AI, management, and game design |
-| Zoha Hasan | @zo._ha | Documentation |
-| Maha Waris Khan | @mahawaris | Frontend support |
-| Sultan Nadeem | Not provided | Systems design and technical strategy |
+| Shayan Hussain · Team Owner | @rockstarsb | Backend architecture, simulation and integration |
+| AbdulMoiz Yousuf | @moizyousuf | Frontend architecture, screens, controls and accessibility |
+| Owais Iqbal | @owaistar | AI, project management, game design, gameplay and 3D |
+| Zoha Hasan | @zo._ha | Documentation, research, source checks and submission copy |
+| Maha Waris Khan | @mahawaris | Frontend support, UI components and responsive layout |
+| Sultan Nadeem | @sult4n | Systems design, technical strategy, mission mechanics and science integration |
 
 ## AI disclosure
 
-Claude (Anthropic) assisted with the white paper, research, and code. OpenAI Codex assisted with repository setup and code. Any AI-generated images must carry a visible watermark. The game scene is procedural and does not use image assets.
+Claude (Anthropic) assisted with the white paper, research, and code. OpenAI Codex assisted with repository setup and code. Claude also wrote the scripts that captured the screenshots in this README from the running game. Any AI-generated images must carry a visible watermark. The game scene is procedural and does not use image assets.
 
 ## Licence
 
