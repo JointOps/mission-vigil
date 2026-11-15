@@ -1,6 +1,5 @@
 # Sources
 
-
 | Value | Source |
 |---|---|
 | O₂ 0.84 kg/day, CO₂ 1.00 kg/day | https://ntrs.nasa.gov/api/citations/20100036823/downloads/20100036823.pdf |
@@ -36,6 +35,7 @@
 | Perseverance saw the first visible-light aurora from the surface of another planet (March 2024, after a solar storm) | https://www.jpl.nasa.gov/news/nasa-observes-first-visible-light-auroras-at-mars/ |
 | Space Station emergency response: warn, gather, work; the crew first works out the time left before the pressure is too low | Tobias and McMillan (NASA JSC), SpaceOps 2023: https://ntrs.nasa.gov/citations/20220019247 |
 | Orion crews stack stowage bags into a radiation shelter during a solar particle event | https://science.nasa.gov/science-research/heliophysics/how-nasa-will-protect-astronauts-from-space-radiation-at-the-moon |
+| Space Station crews spend Saturday on housekeeping: sanitising surfaces, vacuuming dust and clearing air vents | NASA Space Station blog, 1 July 2022: https://www.nasa.gov/blogs/spacestation/2022/07/01/crew-works-multitude-of-research-before-fourth-of-july-weekend/ |
 | Orbits of Earth and Mars (space map): Keplerian elements for 1800 to 2050 | Standish and Williams, via NASA JPL: https://ssd.jpl.nasa.gov/planets/approx_pos.html |
 | Astronomical unit 149,597,870.7 km; speed of light 299,792.458 km/s | NASA JPL: https://ssd.jpl.nasa.gov/astro_par.html |
 | Mars weather at the weather station: 30 sols of air temperature and pressure from Curiosity's REMS station (sols 4966 to 4995, copied 2026-11-15 into `engine/weather.ts`) | Feed: https://mars.nasa.gov/rss/api/?feed=weather&category=msl&feedtype=json · Instrument: https://science.nasa.gov/mission/msl-curiosity/science-instruments/ · Data credit NASA/JPL-Caltech/CAB (CSIC-INTA); the feed says it is for outreach use, and points to the PDS for science use |
@@ -57,17 +57,17 @@ These are game rules, tuned for play, and are tagged `kind: "game"` in `engine/c
 - Suit air: 40 seconds of play, standing in for the real 7 hours.
 - Heat: the cabin tops out at 20 °C, cools by 36 °C per sol at night or under the dust, warms by 24 °C per sol by day, and gains 28 °C per sol for each power given to the heater.
 - Food: a full stomach lasts 3.6 sols, and watered salad grows in 1 sol. Real plants take weeks.
-- The solar flare: 9 seconds outside ends the chapter. Indoors it does a quarter of that harm until the bag shelter is stacked, and none after. This is far stronger than a real flare would feel on the surface of Mars, and the failure screen says so. The radiation meter shows a share of this game limit, not a real dose.
+- The solar flare: 9 seconds outside ends the chapter. Indoors it does 15% of that harm until the bag shelter is stacked, and none after. This is far stronger than a real flare would feel on the surface of Mars, and the failure screen says so. The radiation meter shows a share of this game limit, not a real dose.
 - The "Time left" meter in a leak: sols until the oxygen reaches the level that ends the chapter, at the rate it is falling. Real crews work out the time until the pressure is too low; this game holds pressure constant, so it counts oxygen instead.
 - The space map leaves out the 1.85° tilt of Mars's orbit. Its "next good time to set off" is the day Mars is about 44° ahead of Earth, which follows from the two orbit sizes; real launch periods fall within a few weeks of it.
 - Dust covers the solar panels in the storm on sol 2 and again before sol 5.
-- One sol takes 60 seconds of play.
+- One sol takes 100 seconds of play, so there is time to explore between jobs.
+- Daily chores: vacuuming the air vents, riding the exercise bike and reading the weather station come back every morning at 06:00 and pay their parts again. Ranks: Astronaut from half of the most parts a run can earn, Commander from 85%.
 - The levels that end the chapter: CO₂ 4%, oxygen 16%, cabin 0 °C.
 
 Rule: any value not sourced is labeled *(game)* in code and on screen. Nothing unsourced is presented as fact.
 
 ---
-
 
 ## Assets
 
@@ -77,18 +77,3 @@ Rule: any value not sourced is labeled *(game)* in code and on screen. Nothing u
 | Atkinson Hyperlegible Next (font) | SIL Open Font License 1.1 | Braille Institute, via Google Fonts |
 
 The 3D scene is procedural: no models, textures, images or audio files. List licences and attribution here before adding any.
-
-## Items to verify before presenting as fact
-
-| Topic | Use |
-|---|---|
-| Spacecraft CO₂ limit | Life support; otherwise use a game value |
-| Solar output on Mars and dust loss | Power; otherwise use a game value |
-| Water recycling recovery rate | Water system |
-| Crop yield and growth time | Food; otherwise use a game value |
-| Perchlorates in Martian soil | Food debrief |
-| Regolith shielding versus thickness | Radiation; otherwise use a game value |
-| Mars–Earth communications delay | Story |
-| Ascent propellant requirements | Launch |
-
-The spacesuit oxygen-duration sources listed above still need their cited pages checked. Sources are references for educational context; the game compresses time and uses explicit game rules for playability.

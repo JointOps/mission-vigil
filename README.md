@@ -25,23 +25,29 @@ A **sol** is a day on Mars. Each day introduces another demand while earlier sys
 | **04 · Hold for Flare** | Respond to a solar flare | Shelter, radiation, and a habitat leak |
 | **05 · Go for Home** | Call home | Communications and the systems keeping the base alive |
 
-Explore the outpost, follow ARIA’s guidance, earn parts from tasks, and use the 3D printer to buy upgrades. Fact cards connect actions to space research; a report card shows the outcome. Time, event severity, and selected thresholds are compressed or tuned for play, and are identified as game rules in [SOURCES.md](SOURCES.md).
+Explore the outpost, follow ARIA’s guidance, earn parts from tasks, and use the 3D printer to buy upgrades. Daily chores come back every morning, as they do for real crews. Each first-time job unlocks a “Did you know?” fact card with its source, and a “?” window answers the big questions (what a sol is, why CO₂ matters, how far away Earth is) at any time.
+
+Real data runs through the game: the weather station shows recent sols measured by the Curiosity rover, and a map shows where Earth and Mars are today and how long a radio message takes. Hidden secrets reward curious players.
+
+At the end, players answer a short check from Earth, see their stars, rank, badges and collection, and can save a postcard from Mars and print a certificate. Time, event severity, and selected thresholds are compressed or tuned for play, and are identified as game rules in [SOURCES.md](SOURCES.md).
 
 ## Try it
 
 **[Launch MISSION VIGIL →](https://mission-vigil.vercel.app)**
 
-- **Keyboard:** arrow keys or WASD to move; E, Space, or Enter to interact and advance dialogue; P to pause.
-- **Touch:** tap the ground to move and tap a machine to interact.
+- **Keyboard:** arrow keys or WASD to move; E, Space, or Enter to interact and advance dialogue; P or Escape to pause.
+- **Touch:** tap the ground to move and tap a machine to interact. On a phone, tap a gauge chip to open it.
 - Follow the guided introduction and the yellow trail to the next task. Blue markers indicate optional jobs.
 
-The game stores a best score in the browser’s local storage. It has no accounts or analytics and does not collect personal data.
+The game stores a best score in the browser’s local storage. The name typed on the postcard stays on the page and is never stored or sent. It has no accounts or analytics and does not collect personal data.
 
 ## How it works
 
-The interface and 3D scene are built with **Next.js, React, TypeScript, Three.js, React Three Fiber, drei, and Tailwind CSS**. A plain TypeScript simulation models the systems; **Zustand** connects that simulation to the player interface. The scene is procedural and uses no external 3D models or textures.
+The interface and 3D scene are built with **Next.js, React, TypeScript, Three.js, React Three Fiber, and Tailwind CSS**. A plain TypeScript simulation models the systems; **Zustand** connects that simulation to the player interface. The scene is procedural and uses no external 3D models or textures, the icons are hand-drawn SVG, and every sound is synthesised with the Web Audio API, so there are no image or audio files.
 
-The simulation distinguishes sourced values from game rules. See [SOURCES.md](SOURCES.md) for research, asset licences, and items still requiring verification.
+The 3D scene loads after the page, behind a short loading screen, so the controls work while it arrives. It holds 60 fps and keeps React updates to a handful per second.
+
+The simulation distinguishes sourced values from game rules. See [SOURCES.md](SOURCES.md) for research and asset licences.
 
 ## Run locally
 
@@ -58,6 +64,7 @@ Open [localhost:3000](http://localhost:3000). For verification:
 npm test
 npm run lint
 npm run build
+npm run start   # the production build, for checking load time and frame rate
 ```
 
 ## Team JointOps
