@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import * as THREE from "three";
 import { FLARE, isFlare, isStorm, START_OF_DAY, sunUp } from "@/engine/simulate";
 import { areaOf } from "@/engine/world";
@@ -118,6 +118,10 @@ const SKY = new THREE.ShaderMaterial({
     }`,
 });
 
+/** The point the title screen's camera looks at and sways around. */
+const TITLE_AIM = new THREE.Vector3(1.5, 0.8, 0.5);
+const UP = new THREE.Vector3(0, 1, 0);
+
 type Props = {
   /** Freeze the clock at this hour (0–24) and hold a cinematic camera. Used by the title screen. */
   fixedHour?: number;
@@ -140,6 +144,8 @@ function World({ fixedHour }: Props) {
   const flare = useRef(0);
   const aurora = useRef(0);
   const zoom = useRef(1);
+  const titleView = useRef<THREE.Vector3 | null>(null);
+  const [still] = useState(() => matchMedia("(prefers-reduced-motion: reduce)").matches);
 
   useFrame(({ camera, clock }, delta) => {
     const { sim, player } = useGame.getState();
@@ -205,6 +211,11 @@ function World({ fixedHour }: Props) {
       camera.position.z = damp(camera.position.z, player.z + 8.5 * k, 5, delta);
       camera.position.y = 11.5 * k;
       camera.lookAt(camera.position.x, 0.8, camera.position.z - 8.5 * k + (narrow ? -4 : 1));
+    } else if (!still) {
+      // The title screen sways slowly around the outpost, never far enough to see its unlit side.
+      titleView.current ??= camera.position.clone();
+      camera.position.copy(titleView.current).sub(TITLE_AIM).applyAxisAngle(UP, Math.sin(clock.elapsedTime * 0.12) * 0.28).add(TITLE_AIM);
+      camera.lookAt(TITLE_AIM);
     }
   });
 
@@ -275,7 +286,7 @@ export function Outpost({ fixedHour }: Props) {
       onCreated={({ camera, size }) => {
         // The title screen's fixed view. Narrow screens stand further back to fit the outpost.
         camera.position.multiplyScalar(THREE.MathUtils.clamp(1.6 / (size.width / size.height), 1, 1.9));
-        camera.lookAt(1.5, 0.8, 0.5);
+        camera.lookAt(TITLE_AIM);
       }}
       aria-label="The outpost on the surface of Mars"
       role="img"
