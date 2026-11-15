@@ -16,7 +16,7 @@ The web began as flat pages to read. Now it can hold living worlds to step into.
 
 We believe that, with the help of Super Intelligence, the web can teach children anything by making them part of it. A student who keeps a Mars base alive does more than read that people breathe out CO₂. They watch the CO₂ rise, and they fix it before it is too late.
 
-It needs no app: just a plain web browser, with nothing to install and no account. MISSION VIGIL is our proof. It puts a 3D world, a working simulation and real NASA data in a single web page. The same approach can serve children and much more: training, science and helping the public understand it.
+The world is evolving, and so are everyday people and the technology in their hands. The web is already where they are. It needs no app: just a plain web browser, with nothing to install and no account. MISSION VIGIL is our proof. It puts a 3D world, a working simulation and real NASA data in a single web page. The same approach can serve children and much more: training, science and helping the public understand it.
 
 Our goal is to show what this approach can do, and help make it the normal way to learn.
 
@@ -74,13 +74,13 @@ Every value and fact card is listed with its link in [SOURCES.md](SOURCES.md).
 - **Touch:** tap the ground to move, and tap a machine to use it. On a phone, tap a gauge to open it.
 - Follow the guided start and the yellow trail to the next job. Blue markers show optional jobs.
 
-The game keeps one thing in the browser's local storage: the best score. The name typed on the postcard stays on the page and is never stored or sent. There are no accounts or analytics, and the game collects no personal data.
+The game keeps two things in the browser's local storage: the best score, and which questions the last final check asked, so the next one asks new ones. The name typed on the postcard stays on the page and is never stored or sent. There are no accounts or analytics, and the game collects no personal data.
 
 ## How it works
 
 The interface and 3D scene are built with **Next.js, React, TypeScript, Three.js, React Three Fiber, and Tailwind CSS**. A plain TypeScript simulation models the systems, and **Zustand** connects it to the interface. The game uses no image, model, texture or audio files: the scene is procedural, the icons are hand-drawn SVG, and every sound is made with the Web Audio API. The screenshots and trailer in this README are captures of the game.
 
-The 3D scene loads after the page, behind a short loading screen, so the controls work while it arrives. In our tests it held 60 frames per second mid-game, even with Chrome slowing the processor to a quarter of its speed, and the page changed about 20 times a second. We have not yet tested it on a low-end graphics chip.
+The 3D scene loads after the page, behind a short loading screen, so the controls work while it arrives.
 
 The simulation keeps sourced values apart from game rules. See [SOURCES.md](SOURCES.md) for research and asset licences.
 

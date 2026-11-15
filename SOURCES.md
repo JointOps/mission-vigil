@@ -10,7 +10,6 @@
 | 600 mSv career limit; Mars missions likely need waivers | https://www.nationalacademies.org/news/nasa-should-update-astronaut-radiation-exposure-limits-improve-communication-of-cancer-risks |
 | 26-month launch window | https://www.nsta.org/science-scope/science-scope-julyaugust-2020/back-mars |
 | Torpor for Mars missions (NIAC) | https://ntrs.nasa.gov/citations/20180008683 |
-| Therapeutic torpor in critical care | https://www.foxnews.com/science/nasa-eyes-crew-deep-sleep-option-for-mars-mission |
 | CHAPEA analog mission | https://www.nasa.gov/missions/voyagers-of-mars-the-first-chapea-crews-yearlong-journey |
 | CO₂ limits: 0.7% (5.3 mmHg) for 7–180 days, 1.3% (10 mmHg) for 24 hours | https://ntrs.nasa.gov/citations/20150021777 |
 | CO₂ "immediately dangerous" level, 40,000 ppm (4%) | NIOSH: https://www.cdc.gov/niosh/idlh/124389.html |
@@ -75,6 +74,8 @@ Rule: any value not sourced is labeled *(game)* in code and on screen. Nothing u
 |---|---|---|
 | Big Shoulders, Big Shoulders Stencil (fonts) | SIL Open Font License 1.1 | Google Fonts, loaded through `next/font` |
 | Atkinson Hyperlegible Next (font) | SIL Open Font License 1.1 | Braille Institute, via Google Fonts |
+| Next.js, React, three.js, React Three Fiber, Zustand, Tailwind CSS (open-source code the game is built on) | MIT | npm; versions pinned in `package-lock.json` |
+| TypeScript (build tool) | Apache License 2.0 | npm |
 
 | README screenshots, trailer MP4 and GIF (`public/media/`), share image (`app/opengraph-image.jpg`) | Our own work, MIT | Captured from the running game in headless Chrome; the trailer's text cards are our own HTML and CSS, and it has no music or voice |
 
