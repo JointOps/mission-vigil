@@ -293,16 +293,19 @@ function PowerBox() {
   const heater = useGame((s) => seen(s.sim, "night"));
   const scrubberDown = useGame((s) => s.sim.work.scrubber > 0);
   if (!open) return null;
+  const full = "To give a machine more power, take some back from another.";
   const note =
     used > power
       ? "Too many machines are on, so they all run slow. Tap a lit bar to take power back."
-      : dusty
-        ? "Dusty solar panels give no power. Clean them to get more."
-        : night
-          ? "It is night. The solar panels sleep until the sun comes up."
-          : used === power
-            ? "All the power is in use. To give a machine more, take some back from another."
-            : "Tap a bar to give power. Tap it again to take it back.";
+      : night && used === power
+        ? `It is night, so the solar panels are asleep. ${full}`
+        : dusty
+          ? "Dusty solar panels give no power. Clean them to get more."
+          : night
+            ? "It is night. The solar panels sleep until the sun comes up."
+            : used === power
+              ? `All the power is in use. ${full}`
+              : "Tap a bar to give power. Tap it again to take it back.";
   const row = "flex items-center justify-between gap-3 border-t border-sand/10 py-2";
   return (
     <section className={`${PANEL} border-sunset px-4 pt-3 pb-1`} aria-label="Power box">
