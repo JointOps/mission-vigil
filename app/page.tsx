@@ -72,7 +72,8 @@ export default function Home() {
               </Link>
               <a href={REPO} target="_blank" rel="noopener noreferrer" aria-label={TITLE.codeLabel} className="flex items-center gap-2 rounded-xl border border-sand/25 bg-dusk/60 px-4 py-3 font-display text-xl text-sand/85 hover:border-sand/50 hover:bg-dusk hover:text-sand">
                 <Icon name="github" className="size-6" />
-                {TITLE.code}
+                {/* On a phone only the icon shows, so it stays on one row beside Start. */}
+                <span className="hidden sm:inline">{TITLE.code}</span>
               </a>
             </div>
           </div>
