@@ -94,6 +94,20 @@ body {
   animation: toast 9s ease-out forwards;
 }
 
+/* The radio call on the space map: a dot that flies from Mars (--fx, --fy) to Earth (--tx, --ty). */
+@keyframes signal {
+  from {
+    transform: translate(var(--fx), var(--fy));
+  }
+  to {
+    transform: translate(var(--tx), var(--ty));
+  }
+}
+
+.signal {
+  animation: signal 2.5s linear infinite;
+}
+
 /* ARIA's face: a white ball with one blue eye. */
 .orb {
   width: 3rem;
@@ -113,7 +127,37 @@ body {
   }
 
   /* Without its fade-out a fact card would never leave, so it is shown once at the end instead. */
-  .toast {
+  .toast,
+  .signal {
     display: none;
+  }
+}
+
+/* Printing the end screen prints the certificate alone, dark on white. */
+@media print {
+  body {
+    background: #fff;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  /* A blurred backdrop would pin the certificate inside the scrolling end screen. */
+  [role="dialog"] {
+    background: none;
+    backdrop-filter: none !important;
+  }
+
+  .certificate,
+  .certificate * {
+    visibility: visible;
+  }
+
+  .certificate {
+    position: fixed;
+    inset: 2rem;
+    color: #000;
+    border-color: #000;
   }
 }

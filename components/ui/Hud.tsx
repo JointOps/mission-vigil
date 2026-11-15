@@ -7,6 +7,8 @@ import {
   co2Pct,
   co2Zone,
   FLARE,
+  isCold,
+  isOver,
   isTask,
   jobs,
   MAX_CELLS,
@@ -14,6 +16,7 @@ import {
   o2Zone,
   PANELS,
   powerAt,
+  reserveSols,
   seen,
   START_OF_DAY,
   STORM,
@@ -27,22 +30,34 @@ import {
   UPGRADE_COST,
   type Zone,
 } from "@/engine/simulate";
-import { FACT_IDS, FACTS, MESSAGES, SOLS, UPGRADES } from "@/engine/story";
+import { FACT_IDS, FACTS, IDLE_HINT, MESSAGES, MORE_JOBS, SOLS, SPACE, UPGRADES, WEATHER } from "@/engine/story";
+import { MARS_WEATHER } from "@/engine/weather";
 import { areaOf } from "@/engine/world";
 import { isPlaying, useGame } from "@/store/game";
+import { SpaceView } from "./SpaceView";
 
 // Every selector below rounds what it reads, so a component re-renders only
 // when the number it shows changes, not on every simulation frame.
 
-const PANEL = "rounded-md border border-sand/15 bg-dusk/85 backdrop-blur-md";
-const BUTTON = "rounded-md bg-sunset px-4 py-2 font-display text-lg font-bold text-dusk hover:bg-sand disabled:bg-sand/20 disabled:text-sand/50";
-const QUIET = "rounded-md border border-sand/30 px-3 py-1 font-display text-lg hover:border-sunset hover:text-sunset";
-const ZONE_COLOR: Record<Zone, string> = { safe: "var(--color-safe)", caution: "var(--color-sulfur)", danger: "var(--color-flare)" };
+const PANEL = "rounded-2xl border border-sand/15 bg-dusk/85 backdrop-blur-md";
+const BUTTON = "rounded-xl bg-sunset px-4 py-2 font-display text-lg font-bold text-dusk hover:bg-sand disabled:bg-sand/20 disabled:text-sand/50";
+const QUIET = "rounded-xl border border-sand/30 px-3 py-1 font-display text-lg hover:border-sunset hover:text-sunset";
+const ZONE_COLOR: Record<Zone, string> = {
+  safe: "var(--color-safe)",
+  caution: "var(--color-sulfur)",
+  danger: "var(--color-flare)",
+};
+/** A face says how a gauge is doing before the number is read. */
+const ZONE_FACE: Record<Zone, string> = {
+  safe: "🙂",
+  caution: "😟",
+  danger: "😱",
+};
 const round = (n: number, step: number) => Math.round(n / step) * step;
 
 type Band = readonly [from: number, zone: Zone];
 
-function Gauge(props: { label: string; value: number; digits: number; trend: number; zone: Zone; status: string; min: number; max: number; bands: readonly Band[]; note: string }) {
+function Gauge(props: { label: string; value: number; digits: number; trend: number; zone: Zone; status: string; min: number; max: number; bands: readonly Band[]; note?: string }) {
   const { label, value, digits, trend, zone, status, min, max, bands, note } = props;
   const at = (v: number) => `${Math.max(0, Math.min(1, (v - min) / (max - min))) * 100}%`;
   const stops = bands.map(([from, z], i) => `${ZONE_COLOR[z]} ${at(from)} ${at(bands[i + 1]?.[0] ?? max)}`);
@@ -56,13 +71,19 @@ function Gauge(props: { label: string; value: number; digits: number; trend: num
         </p>
       </div>
       <div className="relative my-2.5 h-2.5" role="meter" aria-label={label} aria-valuemin={min} aria-valuemax={max} aria-valuenow={value} aria-valuetext={`${value.toFixed(digits)} percent, ${status}`}>
-        <div className="h-full rounded-full opacity-80" style={{ background: `linear-gradient(to right, ${stops.join(", ")})` }} />
+        <div
+          className="h-full rounded-full opacity-80"
+          style={{
+            background: `linear-gradient(to right, ${stops.join(", ")})`,
+          }}
+        />
         <div className="absolute top-1/2 h-5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-dusk bg-sand transition-[left] duration-200 ease-linear" style={{ left: at(value) }} />
       </div>
       <p className="text-sm">
+        <span aria-hidden>{ZONE_FACE[zone]} </span>
         <strong style={{ color: ZONE_COLOR[zone] }}>{status}</strong> {trend > 0.05 ? "and going up" : trend < -0.05 ? "and going down" : ""}
       </p>
-      <p className="hidden text-sm text-sand/60 md:block">{note}</p>
+      {note && <p className="hidden text-sm text-sand/60 md:block">{note}</p>}
     </div>
   );
 }
@@ -78,17 +99,23 @@ function Mini({ label, value, pct, zone, note }: { label: string; value: string;
         </p>
       </div>
       <div className="my-1 h-2 rounded-full bg-sand/15" role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-valuetext={`${value}. ${note}`}>
-        <div className="h-full rounded-full" style={{ width: `${Math.max(0, Math.min(100, pct))}%`, background: ZONE_COLOR[zone] }} />
+        <div
+          className="h-full rounded-full"
+          style={{
+            width: `${Math.max(0, Math.min(100, pct))}%`,
+            background: ZONE_COLOR[zone],
+          }}
+        />
       </div>
-      {/* On a phone there is only room for the note when something is wrong. */}
-      <p className={`text-sm leading-tight ${zone === "safe" ? "hidden md:block" : ""}`}>{note}</p>
+      {/* The note is for when something is wrong. A meter that is fine stays one quiet line. */}
+      {zone !== "safe" && <p className="text-sm leading-tight">{note}</p>}
     </div>
   );
 }
 
-/** How warm the room is. Shown from the first night on. */
+/** How warm the room is. Shown when the sun is gone, or while the room is still cold. */
 function Room() {
-  const show = useGame((s) => seen(s.sim, "night"));
+  const show = useGame((s) => seen(s.sim, "night") && (isCold(s.sim.sol) || tempZone(s.sim.tempC) !== "safe"));
   const temp = useGame((s) => Math.round(s.sim.tempC));
   const heating = useGame((s) => s.sim.alloc.heater > 0);
   if (!show) return null;
@@ -125,9 +152,20 @@ function Radiation() {
   const pct = useGame((s) => Math.round(s.sim.dose * 100));
   const hit = useGame((s) => s.sim.sol >= FLARE.from);
   const outside = useGame((s) => areaOf(s.player) === "outside");
+  const stacked = useGame((s) => s.sim.work.bags === 0);
   if (!show) return null;
-  const zone: Zone = outside && hit ? "danger" : pct > 0 ? "caution" : "safe";
-  return <Mini label="Radiation" value={`${pct}%`} pct={pct} zone={zone} note={outside ? "Get inside!" : hit ? "The walls keep you safe." : "Stay inside."} />;
+  const zone: Zone = outside && hit ? "danger" : pct > 0 || !stacked ? "caution" : "safe";
+  return <Mini label="Radiation" value={`${pct}%`} pct={pct} zone={zone} note={outside ? "Get inside!" : !stacked ? "The walls stop most of it. Stack the bags!" : hit ? "The bag shelter keeps you safe." : "Stay inside."} />;
+}
+
+/** How long the air will last while it leaks. Shown once the air screen has been read, until the hole is patched. */
+function TimeLeft() {
+  const show = useGame((s) => s.sim.work.leak > 0 && s.sim.work.gauge === 0 && seen(s.sim, "leak"));
+  // In tenths of a sol, capped at the two sols the bar can show.
+  const sols = useGame((s) => Math.round(Math.min(2, reserveSols(s.sim, areaOf(s.player))) * 10) / 10);
+  if (!show) return null;
+  const zone: Zone = sols > 1 ? "safe" : sols > 0.4 ? "caution" : "danger";
+  return <Mini label="Time left" value={sols >= 2 ? "2 sols or more" : `${sols.toFixed(1)} sols`} pct={sols * 50} zone={zone} note="Until the oxygen is too low. Patch the hole!" />;
 }
 
 function Gauges() {
@@ -136,6 +174,8 @@ function Gauges() {
   // The air only starts to change when the guided start is over.
   const o2Trend = useGame((s) => (s.sim.stage < TUTORIAL_DONE ? 0 : round(trends(s.sim, areaOf(s.player)).o2, 0.1)));
   const co2Trend = useGame((s) => (s.sim.stage < TUTORIAL_DONE ? 0 : round(trends(s.sim, areaOf(s.player)).co2, 0.1)));
+  // The small print under each gauge is for the guided start. After that the colours and the face say it.
+  const learning = useGame((s) => s.sim.stage < TUTORIAL_DONE);
   const o2z = o2Zone(o2);
   const co2z = co2Zone(co2);
   return (
@@ -150,7 +190,7 @@ function Gauges() {
         min={15}
         max={26}
         bands={[[15, "danger"], [17.5, "caution"], [19.5, "safe"], [23.5, "caution"]]}
-        note="The air you breathe in. Good from 19.5 to 23.5%."
+        note={learning ? "The air you breathe in. Good from 19.5 to 23.5%." : undefined}
       />
       <Gauge
         label="CO₂"
@@ -162,11 +202,12 @@ function Gauges() {
         min={0}
         max={4}
         bands={[[0, "safe"], [0.7, "caution"], [1.3, "danger"]]}
-        note="The air you breathe out. Good below 0.7%."
+        note={learning ? "The air you breathe out. Good below 0.7%." : undefined}
       />
       <Room />
       <Suit />
       <Food />
+      <TimeLeft />
       <Radiation />
     </div>
   );
@@ -202,10 +243,36 @@ function TopBar() {
       <div className="order-last w-full md:order-none md:w-auto md:flex-1">
         <div className="relative h-2 rounded-full bg-sand/15" role="progressbar" aria-label="Time until the big air system is ready" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
           {NIGHTS.map((from) => (
-            <div key={from} className="absolute inset-y-0 bg-dusk/80" style={{ left: pct(from), width: pct(Math.min(0.5, CHAPTER_1_SOLS.value - from)) }} title="Night" />
+            <div
+              key={from}
+              className="absolute inset-y-0 bg-dusk/80"
+              style={{
+                left: pct(from),
+                width: pct(Math.min(0.5, CHAPTER_1_SOLS.value - from)),
+              }}
+              title="Night"
+            />
           ))}
-          {stormKnown && <div className="absolute inset-y-0 bg-regolith" style={{ left: pct(STORM.from), width: pct(STORM.to - STORM.from) }} title="Dust storm" />}
-          {flareKnown && <div className="absolute inset-y-0 bg-flare" style={{ left: pct(FLARE.from), width: pct(FLARE.to - FLARE.from) }} title="Solar flare" />}
+          {stormKnown && (
+            <div
+              className="absolute inset-y-0 bg-regolith"
+              style={{
+                left: pct(STORM.from),
+                width: pct(STORM.to - STORM.from),
+              }}
+              title="Dust storm"
+            />
+          )}
+          {flareKnown && (
+            <div
+              className="absolute inset-y-0 bg-flare"
+              style={{
+                left: pct(FLARE.from),
+                width: pct(FLARE.to - FLARE.from),
+              }}
+              title="Solar flare"
+            />
+          )}
           <div className="absolute inset-y-0 left-0 rounded-full bg-sand/80" style={{ width: `${progress}%` }} />
         </div>
       </div>
@@ -232,13 +299,19 @@ function TopBar() {
 function Jobs() {
   const todo = useGame(useShallow((s) => jobs(s.sim)));
   const tutorial = useGame((s) => s.sim.stage < TUTORIAL_DONE);
-  if (todo.length === 0) return null;
+  // While ARIA talks, she is the one thing to read.
+  const talking = useGame((s) => s.line !== null);
+  if (todo.length === 0 || talking) return null;
   // The three blue rocks share one line.
   const count = (job: (typeof todo)[number]) => todo.filter((j) => j.label === job.label).length;
-  const unique = todo.filter((job, i) => todo.findIndex((j) => j.label === job.label) === i);
+  const all = todo.filter((job, i) => todo.findIndex((j) => j.label === job.label) === i);
+  // Every yellow job is listed, but only two blue ones: a long list is hard to choose from.
+  const blue = all.filter((job) => job.side);
+  const unique = [...all.filter((job) => !job.side), ...blue.slice(0, 2)];
   return (
     <section className={`${PANEL} p-3`} aria-label="Jobs">
       <h2 className="font-display text-xl font-semibold">Jobs</h2>
+      {!tutorial && todo.every((job) => job.side) && <p className="text-sm text-sunset">{IDLE_HINT}</p>}
       <ul className="mt-1 flex flex-col gap-1">
         {unique.map((job, i) => (
           <li key={job.label} className={`flex items-baseline gap-2 leading-snug ${i > 2 ? "hidden md:flex" : ""}`}>
@@ -253,6 +326,7 @@ function Jobs() {
           </li>
         ))}
       </ul>
+      {blue.length > 2 && <p className="mt-1 hidden pl-5 text-sm text-sand/60 md:block">{MORE_JOBS(blue.length - 2)}</p>}
       {tutorial && (
         <p className="mt-2 border-t border-sand/10 pt-2 text-sm text-sand/70">
           <span className="md:hidden">Tap where you want to go. Tap a machine to use it.</span>
@@ -375,6 +449,52 @@ function Printer() {
   );
 }
 
+/** Opens at the weather station once it has been read: one real sol of Mars weather for each sol of the mission. */
+function Weather() {
+  const open = useGame((s) => s.near === "weather" && s.sim.work.weather === 0 && isPlaying(s));
+  const day = useGame((s) => Math.floor(s.sim.sol + START_OF_DAY));
+  if (!open) return null;
+  const real = MARS_WEATHER[day % MARS_WEATHER.length];
+  const row = "flex justify-between gap-3 border-t border-sand/10 py-1.5";
+  // A real minus sign, as on the fact cards.
+  const celsius = (c: number) => String(c).replace("-", "−");
+  return (
+    <section className={`${PANEL} border-sunset px-4 pt-3 pb-2`} aria-label={WEATHER.title}>
+      <h2 className="font-display text-xl font-semibold">{WEATHER.title}</h2>
+      <p className="pb-2 text-sm text-sand/70">{WEATHER.from(real.sol, real.date)}</p>
+      <dl>
+        {[
+          [WEATHER.day, `${celsius(real.maxC)} °C`],
+          [WEATHER.night, `${celsius(real.minC)} °C`],
+          [WEATHER.pressure, `${real.pressurePa} Pa`],
+        ].map(([label, value]) => (
+          <div key={label} className={row}>
+            <dt>{label}</dt>
+            <dd className="font-display text-xl font-bold tabular-nums">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="border-t border-sand/10 pt-2 text-sm text-sand/70">
+        {WEATHER.thin}{" "}
+        <a href={WEATHER.source.url} target="_blank" rel="noreferrer" className="underline hover:text-sunset">
+          {WEATHER.source.label}
+        </a>
+      </p>
+    </section>
+  );
+}
+
+/** The map of Earth and Mars comes up while Earth answers the call. */
+function CallHome() {
+  const show = useGame((s) => s.line !== null && s.sim.message === "earth" && !isOver(s.sim));
+  if (!show) return null;
+  return (
+    <div className="rise absolute inset-x-0 top-2 flex justify-center px-2 md:top-16">
+      <SpaceView brief />
+    </div>
+  );
+}
+
 /** ARIA talks one line at a time, and the game waits. */
 function Dialog() {
   const lines = useGame((s) => MESSAGES[s.sim.message]);
@@ -385,11 +505,11 @@ function Dialog() {
   const last = line === lines.length - 1;
   return (
     <div className="absolute inset-x-0 bottom-3 flex justify-center px-2 md:bottom-8" aria-live="polite">
-      <div className={`${PANEL} rise flex w-full max-w-2xl items-start gap-3 border-sunset/60 p-3 md:gap-4 md:p-4`}>
+      <div className={`${PANEL} rise flex w-full max-w-2xl items-start gap-3 border-2 border-sunset/60 p-3 md:gap-4 md:p-5`}>
         <div className="orb mt-1 shrink-0" aria-hidden />
         <div className="flex-1">
           <p className="font-display text-lg text-sunset">ARIA</p>
-          <p key={line} className="rise text-lg leading-snug md:text-xl">
+          <p key={line} className="rise text-xl leading-snug md:text-2xl">
             {lines[line]}
           </p>
           <div className="mt-3 flex items-center justify-between gap-3">
@@ -441,9 +561,11 @@ function Prompt() {
 function FactCard() {
   const count = useGame((s) => s.sim.facts.length);
   const id = useGame((s) => s.sim.facts.at(-1));
+  // One thing at a time: the card waits until ARIA has finished talking.
+  const talking = useGame((s) => s.line !== null);
   if (!id) return null;
   return (
-    <aside key={count} className={`${PANEL} toast pointer-events-none! border-sulfur/60 p-3 md:absolute md:top-20 md:left-1/2 md:w-[28rem] md:-translate-x-1/2`} role="status">
+    <aside key={count} className={`${PANEL} toast pointer-events-none! ${talking ? "invisible [animation-play-state:paused]" : ""} border-sulfur/60 p-3 md:absolute md:top-20 md:left-1/2 md:w-[28rem] md:-translate-x-1/2`} role="status">
       <p className="flex justify-between font-display text-sulfur">
         <span>Did you know?</span>
         <span>
@@ -451,8 +573,25 @@ function FactCard() {
         </span>
       </p>
       <h2 className="font-display text-xl font-semibold">{FACTS[id].title}</h2>
-      <p className="leading-snug">{FACTS[id].text}</p>
+      <p className="text-sm leading-snug md:text-base">{FACTS[id].text}</p>
     </aside>
+  );
+}
+
+/** A title card opens each sol, over ARIA's first words of the morning. */
+function SolCard() {
+  const sol = useGame((s) => (s.line === null || isOver(s.sim) ? -1 : SOLS.findIndex((x) => x.opens === s.sim.message)));
+  if (sol < 0) return null;
+  return (
+    <div className="rise pointer-events-none absolute inset-x-0 top-[42%] px-2 text-center md:top-1/4">
+      <p className={`${PANEL} inline-block px-6 py-3`}>
+        <span className="block font-display text-xl text-sunset">
+          Sol {sol + 1} of {SOLS.length}
+        </span>
+        <span className="block font-stencil text-5xl leading-none uppercase md:text-7xl">{SOLS[sol].title}</span>
+        <span className="block font-display text-xl text-sand/70">{SOLS[sol].focus}</span>
+      </p>
+    </div>
   );
 }
 
@@ -491,6 +630,10 @@ function Paused() {
         <button type="button" onClick={togglePause} className={`${BUTTON} mt-4`}>
           Play
         </button>
+        <details className="mt-4">
+          <summary className="cursor-pointer font-display text-lg text-sunset">{SPACE.title}</summary>
+          <SpaceView />
+        </details>
       </div>
     </div>
   );
@@ -506,12 +649,18 @@ function Vignette() {
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 transition-opacity duration-1000"
-        style={{ opacity: cold === "safe" ? 0 : cold === "caution" ? 0.25 : 0.6, background: "radial-gradient(ellipse at center, transparent 50%, #d6ecff 115%)" }}
+        style={{
+          opacity: cold === "safe" ? 0 : cold === "caution" ? 0.25 : 0.6,
+          background: "radial-gradient(ellipse at center, transparent 50%, #d6ecff 115%)",
+        }}
       />
       <div
         aria-hidden
         className={`pointer-events-none absolute inset-0 transition-opacity duration-1000 ${zone === "danger" ? "alarm" : ""}`}
-        style={{ opacity: zone === "safe" ? 0 : zone === "caution" ? 0.4 : 0.85, background: "radial-gradient(ellipse at center, transparent 45%, var(--color-dusk) 100%)" }}
+        style={{
+          opacity: zone === "safe" ? 0 : zone === "caution" ? 0.4 : 0.85,
+          background: "radial-gradient(ellipse at center, transparent 45%, var(--color-dusk) 100%)",
+        }}
       />
     </>
   );
@@ -532,6 +681,8 @@ export function Hud() {
         </div>
         <FactCard />
       </div>
+      <SolCard />
+      <CallHome />
       <FlareAlert />
       <Prompt />
       <Dialog />
@@ -549,6 +700,7 @@ export function Controls() {
       </div>
       <PowerBox />
       <Printer />
+      <Weather />
     </div>
   );
 }
