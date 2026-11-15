@@ -76,6 +76,7 @@ Rule: any value not sourced is labeled *(game)* in code and on screen. Nothing u
 | Atkinson Hyperlegible Next (font) | SIL Open Font License 1.1 | Braille Institute, via Google Fonts |
 | Next.js, React, three.js, React Three Fiber, Zustand, Tailwind CSS (open-source code the game is built on) | MIT | npm; versions pinned in `package-lock.json` |
 | TypeScript (build tool) | Apache License 2.0 | npm |
+| GitHub icon on the title screen (line drawing of the GitHub mark) | MIT (Feather icons); the GitHub mark is GitHub's trademark, used only to link to our repository | https://github.com/feathericons/feather |
 
 | README screenshots, trailer MP4 and GIF (`public/media/`), share image (`app/opengraph-image.jpg`) | Our own work, MIT | Captured from the running game in headless Chrome; the trailer's text cards are our own HTML and CSS, and it has no music or voice |
 
