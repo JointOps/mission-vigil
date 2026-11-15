@@ -10,6 +10,16 @@ The trailer above is a GIF of real gameplay. **[▶ Watch it in full quality](ht
 
 A browser game by **Team JointOps, Pakistan**, for the **NASA Space Apps Challenge 2026**. Players walk an astronaut through a Martian outpost, wake its systems one by one, and learn how one resource decision affects the rest of the mission. It runs in a web browser with nothing to install and no account.
 
+## Our vision
+
+The web began as flat pages to read. Now it can hold living worlds to step into.
+
+We believe that, with the help of Super Intelligence, the web can teach children anything by making them part of it. A student who keeps a Mars base alive does more than read that people breathe out CO₂. They watch the CO₂ rise, and they fix it before it is too late.
+
+It needs no app: just a plain web browser, with nothing to install and no account. MISSION VIGIL is our proof. It puts a 3D world, a working simulation and real NASA data in a single web page. The same approach can serve children and much more: training, science and helping the public understand it.
+
+Our goal is to show what this approach can do, and help make it the normal way to learn.
+
 ---
 
 ## The challenge
