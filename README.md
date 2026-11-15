@@ -4,9 +4,9 @@
 
 [▶ Play the mission](https://mission-vigil.vercel.app) · [▶ Watch the 30-second trailer](https://mission-vigil.vercel.app/media/trailer.mp4) · [Science & sources](SOURCES.md) · [Meet the team](#team-jointops) · [Run locally](#run-locally)
 
-[![Trailer frame: the astronaut outside the Mars base as dust covers the solar panels, with the caption "Ride out the dust storm." Click to watch the 30-second trailer.](public/media/trailer-poster.jpg)](https://mission-vigil.vercel.app/media/trailer.mp4)
+[![The 30-second MISSION VIGIL trailer: from a flat old web page to a living Mars base. The astronaut wakes the base, shares the power, rides out a dust storm, hides from a solar flare, wins, and answers the call from Earth.](public/media/trailer.gif)](https://mission-vigil.vercel.app/media/trailer.mp4)
 
-**[▶ Watch the 30-second trailer](https://mission-vigil.vercel.app/media/trailer.mp4)** (silent, with English text on screen and a subtitle track; the file is also in this repo at [`public/media/trailer.mp4`](public/media/trailer.mp4)). It shows real gameplay.
+The trailer above is a GIF of real gameplay. **[▶ Watch it in full quality](https://mission-vigil.vercel.app/media/trailer.mp4)** (MP4, silent, with English text on screen and a subtitle track; also in this repo at [`public/media/trailer.mp4`](public/media/trailer.mp4)).
 
 A browser game by **Team JointOps, Pakistan**, for the **NASA Space Apps Challenge 2026**. Players walk an astronaut through a Martian outpost, wake its systems one by one, and learn how one resource decision affects the rest of the mission. It runs in a web browser with nothing to install and no account.
 
