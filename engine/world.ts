@@ -30,6 +30,8 @@ export const STATIONS: Readonly<Record<StationId, Point>> = {
   plant: { x: GARDEN_X - 0.65, z: 1.9 },
   salad: { x: GARDEN_X + 0.65, z: 1.9 },
   bike: { x: -0.9, z: 1.9 },
+  // Under the air vent high on the north wall, in the corner past the air cleaner.
+  vents: { x: -5.4, z: -1.9 },
   console: { x: 1.6, z: 1.9 },
   bags: { x: 3, z: 1.9 },
   recycler: { x: 4.4, z: 1.9 },

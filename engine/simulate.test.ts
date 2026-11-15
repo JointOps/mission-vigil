@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { badges, finalCheck, reportCard } from "./scoring.ts";
-import { type Area, buy, co2Pct, EVENTS, FLARE, initialState, isCold, isOver, isStorm, type Job, jobs, MAX_PARTS, o2Pct, powerAt, reserveSols, seen, setCells, type SimState, spotEarth, step, take, TUTORIAL_DONE, UPGRADE_COST } from "./simulate.ts";
+import { type Area, buy, co2Pct, EVENTS, FLARE, initialState, isCold, isOver, isStorm, type Job, jobs, MAX_PARTS, o2Pct, powerAt, PLANNER_O2_PCT, reserveSols, seen, setCells, type SimState, spot, STORM, step, take, TUTORIAL_DONE, UPGRADE_COST, TASKS, morning } from "./simulate.ts";
 import { areaOf, type Point, route, START, STATIONS, stationNear, walk } from "./world.ts";
 
 const TICK = 0.1;
@@ -256,11 +256,54 @@ test("the final check asks five questions, and only about fact cards the player 
 });
 
 test("the hidden telescope finds the secret card once, and no job ever points to it", () => {
-  const s = spotEarth(initialState());
+  const s = spot(initialState(), "earth");
   assert.ok(s.facts.includes("earthstar"));
-  assert.equal(spotEarth(s), s, "a second look finds nothing new");
+  assert.deepEqual(s.secrets, ["stargazer"]);
+  assert.equal(spot(s, "earth"), s, "a second look finds nothing new");
   assert.ok(jobs(s).every((j) => j.at !== "telescope"), "no trail or marker gives the secret away");
   assert.equal(stationNear(STATIONS.telescope), "telescope");
+  const three = spot(spot(s, "phobos"), "deimos");
+  assert.ok(!three.secrets.includes("skytour"), "three of four is not the whole sky");
+  assert.deepEqual(spot(three, "jupiter").secrets, ["stargazer", "skytour"]);
+});
+
+test("making extra oxygen before the storm, as ARIA advises, earns the Planner secret", () => {
+  const before: SimState = { ...tutorial(), sol: STORM.from - 0.01, nextEvent: EVENTS.findIndex((e) => e.id === "storm") };
+  const storm = (s: SimState) => {
+    while (!seen(s, "storm")) s = step(s, idle, TICK);
+    return s;
+  };
+  const kgPerPct = before.o2Kg / o2Pct(before);
+  assert.deepEqual(storm({ ...before, o2Kg: (PLANNER_O2_PCT + 0.3) * kgPerPct }).secrets, ["planner"]);
+  assert.deepEqual(storm(before).secrets, [], "normal air is not extra");
+});
+
+test("stepping outside under the green sky after the flare earns Aurora watcher", () => {
+  const night: SimState = { ...tutorial(), sol: FLARE.to + 0.05, nextEvent: EVENTS.findIndex((e) => e.id === "lastsol") };
+  assert.deepEqual(step(night, { area: "outside", near: null, working: false }, TICK).secrets, ["aurora"]);
+  assert.deepEqual(step(night, idle, TICK).secrets, [], "it is only seen from outside");
+  assert.deepEqual(step({ ...night, sol: FLARE.from - 0.5 }, { area: "outside", near: null, working: false }, TICK).secrets, [], "no aurora before the flare");
+});
+
+test("winning without printing an upgrade earns Do it yourself", () => {
+  const end: SimState = { ...tutorial(), sol: 4.6, nextEvent: EVENTS.length, work: { ...tutorial().work, console: TASKS.console.seconds } };
+  const press = (s: SimState) => {
+    while (!s.won) s = step(s, { area: "inside", near: "console", working: true }, TICK);
+    return s;
+  };
+  assert.ok(press(end).secrets.includes("diy"));
+  assert.ok(!press({ ...end, upgrades: ["boots"] }).secrets.includes("diy"), "a printed upgrade is no longer doing it yourself");
+});
+
+test("the daily chores come back every morning at 06:00 and pay again", () => {
+  let s: SimState = { ...tutorial(), sol: 0.9, nextEvent: EVENTS.findIndex((e) => e.id === "forecast") };
+  while (s.work.vents > 0) s = step(s, { area: "inside", near: "vents", working: true }, TICK);
+  assert.ok(jobs(s).every((j) => j.at !== "vents"), "done for today");
+  const paid = s.earned;
+  while (morning(s.sol) < 1) s = step(s, idle, TICK);
+  assert.ok(jobs(s).some((j) => j.at === "vents" && j.side), "back the next morning, as a blue job");
+  while (s.work.vents > 0) s = step(s, { area: "inside", near: "vents", working: true }, TICK);
+  assert.equal(s.earned, paid + TASKS.vents.parts);
 });
 
 test("the clock and the suit air stand still while you look through the telescope", () => {

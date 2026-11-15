@@ -1,5 +1,5 @@
 import type { BadgeId } from "./scoring.ts";
-import type { FactId, Failure, MessageId, Upgrade } from "./simulate.ts";
+import type { FactId, Failure, MessageId, SecretId, StationId, Upgrade } from "./simulate.ts";
 
 // Every word the player reads. Written for young readers: short sentences,
 // common words, one idea at a time. A number is given with what it means.
@@ -55,6 +55,7 @@ export const MESSAGES: Readonly<Record<MessageId, readonly string[]>> = {
     "The heater can rest in the day. Use your spare power at the power box.",
     "Uh-oh. A dust storm is coming this afternoon. It will cover the panels.",
     "Tip: make extra oxygen now, before the storm gets here.",
+    "And every morning the chores come back: ride the bike, read the weather, and vacuum the air vents. Real crews keep a daily routine too.",
   ],
   storm: [
     "The storm is here! Dust is on the panels. We are back to 3 power.",
@@ -101,6 +102,13 @@ export const MESSAGES: Readonly<Record<MessageId, readonly string[]>> = {
   ],
   restart: ["Good news! The big air system is ready.", "Go to the big desk and press the green button!"],
 };
+
+/** The small line pictures drawn in components/ui/Icon.tsx. Words always sit beside them. */
+export type IconName =
+  | "bolt" | "fan" | "dial" | "bandage" | "shield" | "home" | "droplet" | "leaf" | "bowl" | "tap" | "bike" | "dish" | "windsock" | "rover" | "button" | "box" | "printer"
+  | "sun" | "moon" | "rock" | "telescope" | "bubbles" | "wind" | "thermometer" | "helmet" | "food" | "hourglass" | "radiation" | "flame"
+  | "boot" | "wrench" | "tank" | "bricks" | "battery" | "cards" | "clipboard" | "sound" | "mute" | "pause" | "play" | "medal" | "download" | "lock" | "gamepad" | "sunset"
+  | "smile" | "worried" | "scared" | "vent";
 
 /** "Did you know?" cards. Each is found by doing something for the first time. */
 export const FACTS: Readonly<Record<FactId, Fact>> = {
@@ -219,6 +227,11 @@ export const FACTS: Readonly<Record<FactId, Fact>> = {
     text: "On NASA's Orion spaceship, the crew can stack their storage bags into a small shelter. They wait inside until the burst from the Sun has passed.",
     source: { label: "NASA: protecting astronauts from space radiation", url: "https://science.nasa.gov/science-research/heliophysics/how-nasa-will-protect-astronauts-from-space-radiation-at-the-moon" },
   },
+  chores: {
+    title: "Cleaning day",
+    text: "On the Space Station, Saturday is cleaning day. The whole crew wipes the walls, vacuums up dust and clears the air vents.",
+    source: { label: "NASA Space Station blog", url: "https://www.nasa.gov/blogs/spacestation/2022/07/01/crew-works-multitude-of-research-before-fourth-of-july-weekend/" },
+  },
   // The secret card: found only by pointing the hidden telescope at Earth.
   earthstar: {
     title: "Earth, the evening star",
@@ -229,13 +242,58 @@ export const FACTS: Readonly<Record<FactId, Fact>> = {
 export const FACT_IDS = Object.keys(FACTS) as FactId[];
 
 /** Things the 3D printer can make from parts. */
-export const UPGRADES: Readonly<Record<Upgrade, { readonly name: string; readonly text: string }>> = {
-  boots: { name: "Fast boots", text: "You walk faster." },
-  tools: { name: "Power tools", text: "You finish jobs twice as fast." },
-  tank: { name: "Big air tank", text: "Your suit air lasts longer outside." },
-  walls: { name: "Thick walls", text: "The base stays warm for longer." },
-  battery: { name: "Spare battery", text: "1 more power, day and night." },
+export const UPGRADES: Readonly<Record<Upgrade, { readonly icon: IconName; readonly name: string; readonly text: string }>> = {
+  boots: { icon: "boot", name: "Fast boots", text: "You walk faster." },
+  tools: { icon: "wrench", name: "Power tools", text: "You finish jobs twice as fast." },
+  tank: { icon: "tank", name: "Big air tank", text: "Your suit air lasts longer outside." },
+  walls: { icon: "bricks", name: "Thick walls", text: "The base stays warm for longer." },
+  battery: { icon: "battery", name: "Spare battery", text: "1 more power, day and night." },
 };
+
+/**
+ * A picture for each place with a job, shown beside its words so a young reader
+ * can find a job at a glance. Pictures only: screen readers read the words.
+ */
+export const ICONS: Readonly<Record<StationId, IconName>> = {
+  power: "bolt",
+  scrubber: "fan",
+  gauge: "dial",
+  leak: "bandage",
+  bags: "shield",
+  shelter: "home",
+  plant: "droplet",
+  salad: "bowl",
+  recycler: "tap",
+  bike: "bike",
+  vents: "vent",
+  antenna: "dish",
+  weather: "windsock",
+  rover: "rover",
+  console: "button",
+  storage: "box",
+  printer: "printer",
+  panel0: "sun",
+  panel1: "sun",
+  panel2: "sun",
+  rock0: "rock",
+  rock1: "rock",
+  rock2: "rock",
+  telescope: "telescope",
+};
+
+/** Pictures for the gauges and the machines at the power box. */
+export const GAUGE_ICONS = { oxygen: "bubbles", co2: "wind", room: "thermometer", suit: "helmet", food: "food", time: "hourglass", radiation: "radiation", scrubber: "fan", heater: "flame" } as const satisfies Record<string, IconName>;
+
+/** What ARIA says when a gauge is tapped on a phone: what it measures and what to do. */
+export const GAUGE_TIPS = {
+  oxygen: "You breathe in oxygen. Keep it between 19.5% and 23.5%. The oxygen maker makes more.",
+  co2: "CO₂ is the gas you breathe out. Too much makes you sick. The air cleaner takes it out.",
+  room: "Mars is very cold. When the sun is gone, give power to the heater.",
+  suit: "Your suit has its own air. Go back inside before it runs out.",
+  food: "An empty tummy makes you slow. Water the salad, then pick it and eat.",
+  time: "This is how long our air will last with the leak. Patch the hole!",
+  radiation: "The flare sends out radiation. The walls and the bag shelter keep you safe.",
+} as const;
 
 /** The title screen. */
 export const TITLE = {
@@ -276,17 +334,35 @@ export const SOLS: readonly { readonly title: string; readonly focus: string; re
 /** Shown in the job list when every job that is left is a blue one. */
 /** The job list shows two blue jobs and counts the rest, so it stays short. */
 export const MORE_JOBS = (count: number) => `and ${count} more blue ${count === 1 ? "job" : "jobs"}`;
+/** The job pill on a phone: the next job, and how many more are in the list. */
+export const NEXT_JOB = "Next job:";
+export const OTHER_JOBS = (count: number) => `${count} more`;
 export const IDLE_HINT = "No yellow jobs right now. Do a blue job to earn parts!";
 
 /** Extra goals shown at the end of a won chapter. */
-export const BADGES: Readonly<Record<BadgeId, { readonly name: string; readonly how: string }>> = {
-  air: { name: "Fresh air", how: "Keep the CO₂ out of the red and the oxygen at 19.5% or more." },
-  warm: { name: "Warm and cosy", how: "Never let the room get colder than 12 °C." },
-  flare: { name: "Flare smart", how: "Take no radiation in the solar flare. Stack the bags in time!" },
-  jobs: { name: "Busy bee", how: "Do every job, the blue ones too." },
-  cards: { name: "Card collector", how: "Find every fact card." },
-  maker: { name: "Maker", how: "Print every upgrade." },
+export const BADGES: Readonly<Record<BadgeId, { readonly icon: IconName; readonly name: string; readonly how: string }>> = {
+  air: { icon: "leaf", name: "Fresh air", how: "Keep the CO₂ out of the red and the oxygen at 19.5% or more." },
+  warm: { icon: "flame", name: "Warm and cosy", how: "Never let the room get colder than 12 °C." },
+  flare: { icon: "shield", name: "Flare smart", how: "Take no radiation in the solar flare. Stack the bags in time!" },
+  jobs: { icon: "clipboard", name: "Busy bee", how: "Do every job, the blue ones too. The chores come back every morning!" },
+  cards: { icon: "cards", name: "Card collector", how: "Find every fact card." },
+  maker: { icon: "printer", name: "Maker", how: "Print every upgrade." },
 };
+
+/**
+ * Hidden goals for curious players. Until one is found, the win screen shows only its riddle.
+ * Never name the telescope outright: finding it is the fun.
+ */
+export const SECRETS: Readonly<Record<SecretId, { readonly name: string; readonly how: string; readonly riddle: string }>> = {
+  stargazer: { name: "Stargazer", how: "You found Earth in the night sky of Mars.", riddle: "Leave the dotted path. Something out past the rover looks up at the stars." },
+  skytour: { name: "Sky tour", how: "You found all 4 things in the telescope sky.", riddle: "Look up, and look all around. There are 4 things to find up there." },
+  aurora: { name: "Aurora watcher", how: "You went outside to see the green sky.", riddle: "After the flare, the night sky does something special. Go out and see it!" },
+  planner: { name: "Planner", how: "You made extra oxygen before the dust storm came.", riddle: "Listen to ARIA's tips. Get ready before trouble comes." },
+  diy: { name: "Do it yourself", how: "You won without printing a single upgrade.", riddle: "Can you win without the 3D printer?" },
+};
+export const SECRET_IDS = Object.keys(SECRETS) as SecretId[];
+export const SECRET_FOUND = "Secret found!";
+export const NEW_FACT = "New fact card:";
 
 export const FAILURES: Readonly<Record<Failure, Debrief>> = {
   co2: {
@@ -326,7 +402,7 @@ export const FAILURES: Readonly<Record<Failure, Debrief>> = {
   },
 };
 
-/** The win screen: five cards, one tap each. */
+/** The win screen: six cards, one tap each. */
 export const SUCCESS = {
   title: "The base is alive!",
   aria: "You did it! You kept the base alive for 5 sols. Real crews do these jobs too.",
@@ -344,9 +420,11 @@ export const SUCCESS = {
   lootTitle: "Your loot",
   badges: "Badges",
   cards: "Fact cards",
+  secrets: "Secrets",
+  secret: "A secret",
   tapToRead: "Tap a card or badge to read it.",
   missing: "Not found yet. Try the jobs you skipped.",
-  toCertificate: "Get my certificate",
+  toPostcard: "Make my postcard",
   tipStars: "Next time: keep the air good and the room warm for most of the mission. That earns 3 stars.",
   tipRank: "Next time: do the blue jobs too. Then you can be a Commander!",
   next: "A ship is on its way. Can you do it again and win every badge?",
@@ -525,6 +603,113 @@ export const WEATHER = {
 /** The words on the certificate a player can print after the final check. */
 export const CERTIFICATE = {
   title: "Junior Astronaut",
-  line: "finished astronaut training on Mars and kept the base alive for 5 sols.",
+  goesTo: "This certificate goes to",
+  line: "who finished astronaut training on Mars and kept the base alive for 5 sols.",
   sign: "Write your name here",
+  seal: (rank: string) => `${rank} seal`,
+  wings: (wings: number) => `${wings} of 5 wings`,
+  secrets: (found: number, of: number) => `${found} of ${of} secrets`,
+  where: "Mars Base, sol 5",
+  signed: "Base computer",
 } as const;
+
+/**
+ * The postcard a player makes after the win, to keep and show their family.
+ * The distance and the radio time are worked out from real orbits for the day it is made.
+ */
+export const POSTCARD = {
+  title: "Your postcard from Mars",
+  name: "Your first name (you can skip this)",
+  privacy: "Your name stays on this computer. It is not saved or sent anywhere.",
+  greetings: "Greetings from",
+  mars: "MARS",
+  hello: "Hello from Mars!",
+  kept: "I kept the base alive for 5 sols.",
+  to: "To: Earth",
+  from: (name: string) => `From: ${name || "a Junior Astronaut"}`,
+  where: "Mars Base, sol 5",
+  away: (millionKm: number) => `${millionKm} million km from home`,
+  radio: (minutes: number) => `A radio call takes ${minutes} minutes to get there today.`,
+  arrive: (time: string) => `If you sent it by radio now, it would reach Earth at ${time}.`,
+  picture: (name: string, rank: string) => `Your postcard. It says Greetings from Mars, from ${name || "a Junior Astronaut"}, ${rank}.`,
+  save: "Save my postcard",
+  saved: "Saved! Look in your downloads, then show your family.",
+  toCertificate: "Get my certificate",
+} as const;
+
+/**
+ * The "?" window: short answers to the big ideas behind the game, for a player
+ * who is curious or stuck. Each topic can show one fact card's text. Never
+ * mention the hidden telescope here.
+ */
+export const LEARN = {
+  open: "Learn about Mars",
+  title: "Learn about Mars",
+  intro: "Tap a question to read the answer. The game waits while you read.",
+  didYouKnow: "Did you know?",
+  close: "Back to the game",
+  topics: [
+    {
+      icon: "sunset",
+      question: "What is a sol?",
+      answer: ["A sol is one day on Mars.", "Your job is to keep the base alive for 5 sols. Then the big air system is ready."],
+      fact: "sol",
+    },
+    {
+      icon: "wind",
+      question: "Air: oxygen and CO₂",
+      answer: [
+        "You breathe in a gas called oxygen. You breathe out a gas called CO₂.",
+        "The oxygen maker makes oxygen. The air cleaner takes CO₂ out of the air.",
+        "Watch the CO₂ most. It gets dangerous long before the oxygen runs out.",
+      ],
+      fact: "co2",
+    },
+    {
+      icon: "bolt",
+      question: "Power and heat",
+      answer: [
+        "Every machine needs power. At the power box, you choose which ones get it.",
+        "Solar panels turn sunlight into power. At night they stop. Dust stops them too.",
+        "Mars is very cold. When the sun is gone, give 1 power to the heater.",
+      ],
+      fact: "cold",
+    },
+    {
+      icon: "leaf",
+      question: "Food and water",
+      answer: ["There are no shops on Mars! Astronauts bring food, and grow some too.", "Salad needs water and light to grow. When it is big, pick it and eat."],
+      fact: "water",
+    },
+    {
+      icon: "radiation",
+      question: "Radiation",
+      answer: [
+        "The Sun sends out radiation. It is made of tiny, fast bits you cannot see.",
+        "Too much of it can make you very sick.",
+        "In a solar flare, go inside. Stack the supply bags into a shelter, and wait for ARIA to say all clear.",
+      ],
+      fact: "flare",
+    },
+    {
+      icon: "dish",
+      question: "Talking to Earth",
+      answer: ["Radio is as fast as light. But Mars is very far away, so every message takes minutes to arrive.", "Here is where Earth and Mars are today:"],
+      fact: "delay",
+      map: true,
+    },
+    {
+      icon: "gamepad",
+      question: "How to play",
+      answer: [
+        "Walk with the arrow keys or W A S D. On a phone, tap the ground.",
+        "Press E, or tap a machine, to use it.",
+        "Follow the yellow dots to your next job. Yellow jobs keep you alive.",
+        "Blue jobs are extra. They give you parts for the 3D printer.",
+        "Press P to pause.",
+      ],
+    },
+  ],
+} as const satisfies {
+  readonly topics: readonly { readonly icon: IconName; readonly question: string; readonly answer: readonly string[]; readonly fact?: FactId; readonly map?: boolean }[];
+} & Record<string, unknown>;

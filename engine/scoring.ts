@@ -14,8 +14,8 @@ export type ReportCard = {
 export function reportCard(s: SimState): ReportCard {
   const safeAirPct = s.sol > 0 ? Math.round((s.safeSols / s.sol) * 100) : 0;
   const stars = !s.won ? 0 : safeAirPct >= 85 ? 3 : safeAirPct >= 45 ? 2 : 1;
-  // The must-do jobs alone earn about two thirds of the parts; Commander needs the optional ones too.
-  const rank = s.earned >= MAX_PARTS * 0.85 ? 2 : s.earned >= MAX_PARTS * 0.6 ? 1 : 0;
+  // The must-do jobs alone earn about half the parts; Commander needs the blue jobs and most of the daily chores too.
+  const rank = s.earned >= MAX_PARTS * 0.85 ? 2 : s.earned >= MAX_PARTS * 0.5 ? 1 : 0;
   return { stars, safeAirPct, rank };
 }
 

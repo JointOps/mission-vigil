@@ -59,7 +59,7 @@ export const BASE_POWER = { value: 3, unit: "power", kind: "game" } as const sat
 /** Seconds of play a suit's air lasts outside. Game rule: a real NASA suit holds about 7 hours. https://ntrs.nasa.gov/citations/20140000238 */
 export const SUIT_SECONDS = { value: 40, unit: "s", kind: "game" } as const satisfies Constant;
 /** Real seconds one sol takes on screen. Game pacing. */
-export const SECONDS_PER_SOL = { value: 60, unit: "s", kind: "game" } as const satisfies Constant;
+export const SECONDS_PER_SOL = { value: 100, unit: "s", kind: "game" } as const satisfies Constant;
 /** CO2 removed by the scrubber per power cell. Game rule. */
 export const SCRUBBER_KG_PER_CELL_SOL = { value: 0.45, unit: "kg/sol", kind: "game" } as const satisfies Constant;
 /** Oxygen made by the oxygen maker per power cell. Game rule. */
@@ -87,6 +87,6 @@ export const FULL_SOLS = { value: 3.6, unit: "sols", kind: "game" } as const sat
 /** Sols watered salad takes to grow under the lamps. Game rule: real plants take weeks. */
 export const GROW_SOLS = { value: 1, unit: "sols", kind: "game" } as const satisfies Constant;
 /** Indoors, before the bag shelter is built, the flare does this share of its harm. Game rule. */
-export const FLARE_INDOOR_SHARE = { value: 0.25, unit: "", kind: "game" } as const satisfies Constant;
+export const FLARE_INDOOR_SHARE = { value: 0.15, unit: "", kind: "game" } as const satisfies Constant;
 /** Seconds of play outside in the solar flare that end the chapter. Game rule: far stronger than a real flare felt on the surface of Mars. */
 export const FLARE_SECONDS = { value: 9, unit: "s", kind: "game" } as const satisfies Constant;

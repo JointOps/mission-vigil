@@ -45,13 +45,17 @@ export const ROCKS = ["rock0", "rock1", "rock2"] as const;
 export type System = "scrubber" | "oxygen" | "heater";
 export type Allocation = Readonly<Record<System, number>>;
 /** Hands-on jobs, each named after the station it is done at. */
-export type Task = "power" | "scrubber" | "gauge" | "leak" | "bags" | "plant" | "salad" | "recycler" | "bike" | "antenna" | "weather" | "rover" | "console" | (typeof PANELS)[number] | (typeof ROCKS)[number];
+export type Task = "power" | "scrubber" | "gauge" | "leak" | "bags" | "plant" | "salad" | "recycler" | "bike" | "vents" | "antenna" | "weather" | "rover" | "console" | (typeof PANELS)[number] | (typeof ROCKS)[number];
 export type StationId = Task | "storage" | "printer" | "shelter" | "telescope";
 export type Area = "inside" | "airlock" | "outside";
 export type Item = "filter" | "patch";
 export type Upgrade = "boots" | "tools" | "tank" | "walls" | "battery";
 export type Failure = "co2" | "o2" | "suit" | "cold" | "radiation";
 export type Zone = "safe" | "caution" | "danger";
+/** Hidden goals that reward exploring and thinking ahead. No marker or trail ever points to them. */
+export type SecretId = "stargazer" | "skytour" | "aurora" | "planner" | "diy";
+/** What can be found in the hidden telescope's sky. */
+export type SkyThing = "earth" | "phobos" | "deimos" | "jupiter";
 export type EventId = "night" | "forecast" | "storm" | "filter" | "clear" | "hungry" | "leak" | "flare" | "allclear" | "lastsol" | "restart";
 export type MessageId = EventId | "intro" | "switch" | "cleaner" | "oxygen" | "ready" | "suit" | "gathered" | "earth";
 export type FactId =
@@ -78,6 +82,7 @@ export type FactId =
   | "aurora"
   | "gather"
   | "shelter"
+  | "chores"
   | "earthstar";
 
 /** What the astronaut is doing during a step. */
@@ -116,6 +121,10 @@ export type SimState = {
   readonly upgrades: readonly Upgrade[];
   /** Fact cards found so far, oldest first. */
   readonly facts: readonly FactId[];
+  /** Secrets found so far, oldest first. */
+  readonly secrets: readonly SecretId[];
+  /** Things found in the telescope's sky. */
+  readonly sky: readonly SkyThing[];
   /** What ARIA said last, and how many times she has spoken. */
   readonly message: MessageId;
   readonly said: number;
@@ -191,6 +200,7 @@ export const TASKS: Readonly<Record<Task, TaskRule>> = {
   salad: { seconds: 2, parts: 60, label: "Pick the salad and eat it", fact: "food" },
   recycler: { seconds: 3, parts: 80, label: "Fix the water cleaner", fact: "water", side: true },
   bike: { seconds: 3, parts: 30, label: "Ride the exercise bike", fact: "bones", side: true },
+  vents: { seconds: 2.5, parts: 30, label: "Vacuum the air vents", fact: "chores", side: true },
   antenna: { seconds: 3, parts: 60, label: "Point the radio dish at Earth", fact: "delay", side: true },
   weather: { seconds: 2, parts: 60, label: "Read the weather station", fact: "wind", side: true },
   rover: { seconds: 2.5, parts: 60, label: "Wake up the rover", fact: "rover", side: true },
@@ -203,8 +213,15 @@ export const TASKS: Readonly<Record<Task, TaskRule>> = {
 };
 const TASK_IDS = Object.keys(TASKS) as Task[];
 export const isTask = (id: StationId | null): id is Task => id !== null && id in TASKS;
-/** Most parts a perfect run can earn: every job once, the panels three times, and three guided steps. */
-export const MAX_PARTS = TASK_IDS.reduce((sum, t) => sum + TASKS[t].parts, 0) + 2 * PANELS.reduce((sum, p) => sum + TASKS[p].parts, 0) + 3 * STEP_PARTS;
+/** Jobs that come back every morning at 06:00, the way real crews keep a daily routine. */
+export const CHORES: readonly Task[] = ["vents", "bike", "weather"];
+/** Which morning it is: 0 from 06:00 on the first sol, 1 from 06:00 on the second, and so on. */
+export const morning = (sol: number) => Math.floor(sol + START_OF_DAY - 0.25);
+/** Mornings after the first on which the chores come back. */
+const LATER_MORNINGS = morning(CHAPTER_1_SOLS.value);
+/** Most parts a perfect run can earn: every job once, the chores again each later morning, the panels three times, and three guided steps. */
+export const MAX_PARTS =
+  TASK_IDS.reduce((sum, t) => sum + TASKS[t].parts, 0) + LATER_MORNINGS * CHORES.reduce((sum, t) => sum + TASKS[t].parts, 0) + 2 * PANELS.reduce((sum, p) => sum + TASKS[p].parts, 0) + 3 * STEP_PARTS;
 
 // Ideal gas law: n = PV / RT. Total pressure is held constant (game rule), so
 // each gas's share of the air is its moles over this fixed total.
@@ -251,6 +268,8 @@ export function initialState(): SimState {
     earned: 0,
     upgrades: [],
     facts: [],
+    secrets: [],
+    sky: [],
     message: "intro",
     said: 0,
     nextEvent: 0,
@@ -265,6 +284,10 @@ export function initialState(): SimState {
 
 export const isStorm = (sol: number) => sol >= STORM.from && sol < STORM.to;
 export const isFlare = (sol: number) => sol >= FLARE.from && sol < FLARE.to;
+/** The green sky in the first night after the flare. */
+export const isAurora = (sol: number) => sol >= FLARE.to && sol < FLARE.to + 0.5 && !sunUp(sol);
+/** Oxygen that counts as "made extra before the storm", as ARIA's forecast asks. Game rule: normal air is 20.9%. */
+export const PLANNER_O2_PCT = 21.5;
 /** The sun is up from 06:00 to 18:00. */
 export function sunUp(sol: number): boolean {
   const hour = ((sol + START_OF_DAY) % 1) * 24;
@@ -301,7 +324,7 @@ const TAKE_FILTER = job("storage", "Take a new filter from the shelf", "take");
 const TAKE_PATCH = job("storage", "Take a patch from the shelf", "take");
 const SHELTER = job("shelter", "Solar flare! Stay inside the base", "go");
 const TUTORIAL = [[GO_POWER], [WORK.power], [ROUTE_CLEANER], [ROUTE_OXYGEN]];
-const INDOOR_SIDE: readonly Task[] = ["recycler", "bike"];
+const INDOOR_SIDE: readonly Task[] = ["recycler", "vents", "bike"];
 const OUTDOOR_SIDE: readonly Task[] = ["antenna", "weather", "rover", ...ROCKS];
 
 /**
@@ -353,9 +376,20 @@ export function setCells(s: SimState, system: System, cells: number): SimState {
   return { ...s, alloc: { ...s.alloc, [system]: Math.max(0, Math.min(cells, MAX_CELLS[system], room)) } };
 }
 
-/** The hidden telescope: the first time Earth is in its sights, the secret fact card is found. */
-export function spotEarth(s: SimState): SimState {
-  return s.facts.includes("earthstar") ? s : { ...s, facts: [...s.facts, "earthstar"] };
+const SKY_THINGS: readonly SkyThing[] = ["earth", "phobos", "deimos", "jupiter"];
+const withSecret = (secrets: readonly SecretId[], id: SecretId) => (secrets.includes(id) ? secrets : [...secrets, id]);
+
+/** Something is in the hidden telescope's sights. Earth finds the secret card; all four things finish the sky tour. */
+export function spot(s: SimState, thing: SkyThing): SimState {
+  if (s.sky.includes(thing)) return s;
+  const sky = [...s.sky, thing];
+  let { facts, secrets } = s;
+  if (thing === "earth") {
+    facts = facts.includes("earthstar") ? facts : [...facts, "earthstar"];
+    secrets = withSecret(secrets, "stargazer");
+  }
+  if (SKY_THINGS.every((t) => sky.includes(t))) secrets = withSecret(secrets, "skytour");
+  return { ...s, sky, facts, secrets };
 }
 
 /** Pick up from the shelf whichever spare part is needed, the air cleaner's first. */
@@ -413,6 +447,9 @@ export function step(s: SimState, input: Input, seconds: number): SimState {
   const learn = (fact?: FactId) => {
     if (fact && !d.facts.includes(fact)) d.facts = [...d.facts, fact];
   };
+  const find = (id: SecretId) => {
+    d.secrets = withSecret(d.secrets, id);
+  };
   const reward = (parts: number) => {
     d.parts += parts;
     d.earned += parts;
@@ -436,7 +473,10 @@ export function step(s: SimState, input: Input, seconds: number): SimState {
       if (task === "salad") d.food = 1;
       if (task === "gauge") say("gathered");
       if (task === "antenna") say("earth");
-      if (task === "console") d.won = true;
+      if (task === "console") {
+        d.won = true;
+        if (s.upgrades.length === 0) find("diy");
+      }
     }
   }
 
@@ -466,6 +506,7 @@ export function step(s: SimState, input: Input, seconds: number): SimState {
     say("suit");
   }
   if (outside) learn("marsair");
+  if (outside && isAurora(s.sol)) find("aurora");
   d.suit = Math.max(0, Math.min(1, s.suit + (outside ? -seconds / suitSeconds(s) : seconds / SUIT_REFILL_SECONDS)));
   if (outside && d.suit === 0) d.failure = "suit";
 
@@ -488,6 +529,9 @@ export function step(s: SimState, input: Input, seconds: number): SimState {
   const harm = outside ? 1 : s.work.bags > 0 ? FLARE_INDOOR_SHARE.value : 0;
   if (isFlare(s.sol)) d.dose = Math.min(1, s.dose + (seconds / FLARE_SECONDS.value) * harm);
 
+  // A new morning brings the chores back.
+  if (morning(d.sol) > morning(s.sol)) for (const t of CHORES) if (d.work[t] === 0) d.work = { ...d.work, [t]: TASKS[t].seconds };
+
   if (fires) {
     d.nextEvent++;
     say(event.id);
@@ -495,7 +539,10 @@ export function step(s: SimState, input: Input, seconds: number): SimState {
     // Dust buries the panels in the storm, and a dusty wind covers them again before the last sol.
     if (event.id === "storm" || event.id === "lastsol") d.work = { ...d.work, panel0: TASKS.panel0.seconds, panel1: TASKS.panel1.seconds, panel2: TASKS.panel2.seconds };
     // In the storm the power box trips too.
-    if (event.id === "storm") d.alloc = NO_POWER;
+    if (event.id === "storm") {
+      d.alloc = NO_POWER;
+      if (o2Pct(d) >= PLANNER_O2_PCT) find("planner");
+    }
     if (event.id === "filter") d.work = { ...d.work, scrubber: TASKS.scrubber.seconds };
     if (event.id === "leak") d.work = { ...d.work, leak: TASKS.leak.seconds, gauge: TASKS.gauge.seconds };
     if (event.id === "flare") {
