@@ -62,7 +62,7 @@ npm run build
 
 ## Team JointOps
 
-Five builders from Pakistan. Handles are Space Apps handles, not GitHub usernames.
+Team JointOps is based in Pakistan. Handles are Space Apps handles, not GitHub usernames.
 
 | Member | Space Apps handle | Role |
 | :--- | :--- | :--- |
@@ -71,6 +71,7 @@ Five builders from Pakistan. Handles are Space Apps handles, not GitHub username
 | Owais Iqbal | @owaistar | AI, management, and game design |
 | Zoha Hasan | @zo._ha | Documentation |
 | Maha Waris Khan | @mahawaris | Frontend support |
+| Sultan Nadeem | Not provided | Systems design and technical strategy |
 
 ## AI disclosure
 
