@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { CABIN_TEMP_C, CHAPTER_1_SOLS, SECONDS_PER_SOL } from "@/engine/constants";
+import { CABIN_TEMP_C, CHAPTER_1_SOLS, CO2_DANGER_PCT, CO2_SAFE_MAX_PCT, O2_DANGER_PCT, O2_SAFE_MAX_PCT, O2_SAFE_MIN_PCT, SECONDS_PER_SOL } from "@/engine/constants";
 import {
   co2Pct,
   co2Zone,
@@ -31,7 +31,7 @@ import {
   UPGRADE_COST,
   type Zone,
 } from "@/engine/simulate";
-import { FACT_IDS, FACTS, GAUGE_ICONS, GAUGE_TIPS, type IconName, NEW_FACT, NEXT_JOB, OTHER_JOBS, ICONS, IDLE_HINT, MESSAGES, MORE_JOBS, SECRET_FOUND, SECRETS, SOLS, SPACE, UPGRADES, WEATHER } from "@/engine/story";
+import { FACT_IDS, FACTS, GAUGE_ICONS, GAUGE_TIPS, HUD, type IconName, NEW_FACT, NEXT_JOB, OTHER_JOBS, ICONS, IDLE_HINT, MESSAGES, MORE_JOBS, SECRET_FOUND, SECRETS, SOLS, SPACE, UPGRADES, WEATHER } from "@/engine/story";
 import { MARS_WEATHER } from "@/engine/weather";
 import { areaOf } from "@/engine/world";
 import { isPlaying, useGame } from "@/store/game";
@@ -58,6 +58,7 @@ const ZONE_FACE: Record<Zone, IconName> = {
   danger: "scared",
 };
 const round = (n: number, step: number) => Math.round(n / step) * step;
+const SYSTEMS: readonly System[] = ["scrubber", "oxygen", "heater"];
 
 type Band = readonly [from: number, zone: Zone];
 
@@ -100,34 +101,34 @@ function Gauge(props: { icon: IconName; label: string; tip: string; value: numbe
   const stops = bands.map(([from, z], i) => `${ZONE_COLOR[z]} ${at(from)} ${at(bands[i + 1]?.[0] ?? max)}`);
   return (
     <Chip icon={icon} label={label} short={`${value.toFixed(digits)}%`} zone={zone} tip={tip}>
-    <div className={`${PANEL} p-2.5 md:p-3 ${zone === "danger" ? "alarm-border" : ""}`}>
-      <div className="flex items-baseline justify-between gap-2">
-        <h2 className="font-display text-lg leading-none font-semibold">
-          <Icon name={icon} className="mr-1.5 size-[1.1em]" />
-          {label}
-        </h2>
-        <p className="font-display text-3xl font-bold tabular-nums leading-none md:text-4xl" style={{ color: ZONE_COLOR[zone] }}>
-          {value.toFixed(digits)}
-          <span className="text-lg md:text-xl">%</span>
+      <div className={`${PANEL} p-2.5 md:p-3 ${zone === "danger" ? "alarm-border" : ""}`}>
+        <div className="flex items-baseline justify-between gap-2">
+          <h2 className="font-display text-lg leading-none font-semibold">
+            <Icon name={icon} className="mr-1.5 size-[1.1em]" />
+            {label}
+          </h2>
+          <p className="font-display text-3xl font-bold tabular-nums leading-none md:text-4xl" style={{ color: ZONE_COLOR[zone] }}>
+            {value.toFixed(digits)}
+            <span className="text-lg md:text-xl">%</span>
+          </p>
+        </div>
+        <div className="relative my-2.5 h-2.5" role="meter" aria-label={label} aria-valuemin={min} aria-valuemax={max} aria-valuenow={value} aria-valuetext={HUD.meterText(value.toFixed(digits), status)}>
+          <div
+            className="h-full rounded-full opacity-80"
+            style={{
+              background: `linear-gradient(to right, ${stops.join(", ")})`,
+            }}
+          />
+          <div className="absolute top-1/2 h-5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-dusk bg-sand transition-[left] duration-200 ease-linear" style={{ left: at(value) }} />
+        </div>
+        <p className="text-sm">
+          <span style={{ color: ZONE_COLOR[zone] }}>
+            <Icon name={ZONE_FACE[zone]} className="mr-1 size-[1.1em]" />
+          </span>
+          <strong style={{ color: ZONE_COLOR[zone] }}>{status}</strong> {trend > 0.05 ? HUD.rising : trend < -0.05 ? HUD.falling : ""}
         </p>
+        {note && <p className="hidden text-sm text-sand/60 md:block">{note}</p>}
       </div>
-      <div className="relative my-2.5 h-2.5" role="meter" aria-label={label} aria-valuemin={min} aria-valuemax={max} aria-valuenow={value} aria-valuetext={`${value.toFixed(digits)} percent, ${status}`}>
-        <div
-          className="h-full rounded-full opacity-80"
-          style={{
-            background: `linear-gradient(to right, ${stops.join(", ")})`,
-          }}
-        />
-        <div className="absolute top-1/2 h-5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-dusk bg-sand transition-[left] duration-200 ease-linear" style={{ left: at(value) }} />
-      </div>
-      <p className="text-sm">
-        <span style={{ color: ZONE_COLOR[zone] }}>
-          <Icon name={ZONE_FACE[zone]} className="mr-1 size-[1.1em]" />
-        </span>
-        <strong style={{ color: ZONE_COLOR[zone] }}>{status}</strong> {trend > 0.05 ? "and going up" : trend < -0.05 ? "and going down" : ""}
-      </p>
-      {note && <p className="hidden text-sm text-sand/60 md:block">{note}</p>}
-    </div>
     </Chip>
   );
 }
@@ -136,28 +137,28 @@ function Gauge(props: { icon: IconName; label: string; tip: string; value: numbe
 function Mini({ icon, label, tip, value, pct, zone, note }: { icon: IconName; label: string; tip: string; value: string; pct: number; zone: Zone; note: string }) {
   return (
     <Chip icon={icon} label={label} short={value} zone={zone} tip={tip}>
-    <div className={`${PANEL} px-2.5 py-1.5 md:px-3 ${zone === "danger" ? "alarm-border" : ""}`}>
-      <div className="flex items-baseline justify-between gap-2">
-        <h2 className="font-display text-lg leading-none font-semibold">
-          <Icon name={icon} className="mr-1.5 size-[1.1em]" />
-          {label}
-        </h2>
-        <p className="font-display text-xl font-bold tabular-nums leading-none" style={{ color: ZONE_COLOR[zone] }}>
-          {value}
-        </p>
+      <div className={`${PANEL} px-2.5 py-1.5 md:px-3 ${zone === "danger" ? "alarm-border" : ""}`}>
+        <div className="flex items-baseline justify-between gap-2">
+          <h2 className="font-display text-lg leading-none font-semibold">
+            <Icon name={icon} className="mr-1.5 size-[1.1em]" />
+            {label}
+          </h2>
+          <p className="font-display text-xl font-bold tabular-nums leading-none" style={{ color: ZONE_COLOR[zone] }}>
+            {value}
+          </p>
+        </div>
+        <div className="my-1 h-2 rounded-full bg-sand/15" role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-valuetext={`${value}. ${note}`}>
+          <div
+            className="h-full rounded-full"
+            style={{
+              width: `${Math.max(0, Math.min(100, pct))}%`,
+              background: ZONE_COLOR[zone],
+            }}
+          />
+        </div>
+        {/* The note is for when something is wrong. A meter that is fine stays one quiet line. */}
+        {zone !== "safe" && <p className="text-sm leading-tight">{note}</p>}
       </div>
-      <div className="my-1 h-2 rounded-full bg-sand/15" role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-valuetext={`${value}. ${note}`}>
-        <div
-          className="h-full rounded-full"
-          style={{
-            width: `${Math.max(0, Math.min(100, pct))}%`,
-            background: ZONE_COLOR[zone],
-          }}
-        />
-      </div>
-      {/* The note is for when something is wrong. A meter that is fine stays one quiet line. */}
-      {zone !== "safe" && <p className="text-sm leading-tight">{note}</p>}
-    </div>
     </Chip>
   );
 }
@@ -169,8 +170,8 @@ function Room() {
   const heating = useGame((s) => s.sim.alloc.heater > 0);
   if (!show) return null;
   const zone = tempZone(temp);
-  const note = zone === "safe" ? (heating ? "Warm. The heater is on." : "Warm.") : zone === "caution" ? "Getting cold. Use the heater." : "Freezing! Give the heater power.";
-  return <Mini icon={GAUGE_ICONS.room} label="Room" tip={GAUGE_TIPS.room} value={`${temp} °C`} pct={(temp / CABIN_TEMP_C.value) * 100} zone={zone} note={note} />;
+  const note = zone === "safe" ? (heating ? HUD.room.heating : HUD.room.warm) : zone === "caution" ? HUD.room.cool : HUD.room.freezing;
+  return <Mini icon={GAUGE_ICONS.room} label={HUD.room.label} tip={GAUGE_TIPS.room} value={`${temp} °C`} pct={(temp / CABIN_TEMP_C.value) * 100} zone={zone} note={note} />;
 }
 
 /** The suit's own air. Shown from the first step into the airlock until it has filled up again. */
@@ -180,7 +181,7 @@ function Suit() {
   const outside = useGame((s) => areaOf(s.player) === "outside");
   if (!show) return null;
   const zone: Zone = pct > 50 ? "safe" : pct > 25 ? "caution" : "danger";
-  return <Mini icon={GAUGE_ICONS.suit} label="Suit air" tip={GAUGE_TIPS.suit} value={`${pct}%`} pct={pct} zone={zone} note={!outside ? "Filling up inside." : zone === "safe" ? "You are breathing suit air." : "Go back to the airlock!"} />;
+  return <Mini icon={GAUGE_ICONS.suit} label={HUD.suit.label} tip={GAUGE_TIPS.suit} value={`${pct}%`} pct={pct} zone={zone} note={!outside ? HUD.suit.filling : zone === "safe" ? HUD.suit.fine : HUD.suit.low} />;
 }
 
 /** How hungry the astronaut is. Shown from the first rumble until the salad is eaten. */
@@ -191,8 +192,8 @@ function Food() {
   const watered = useGame((s) => s.sim.work.plant === 0);
   if (!show) return null;
   const zone: Zone = pct > 25 ? "safe" : pct > 0 ? "caution" : "danger";
-  const todo = grown >= 100 ? "The salad is ready. Eat!" : watered ? `The salad is growing: ${grown}%` : "Water the salad plants.";
-  return <Mini icon={GAUGE_ICONS.food} label="Food" tip={GAUGE_TIPS.food} value={pct > 0 ? "Hungry" : "Very hungry"} pct={pct} zone={zone} note={pct > 0 ? todo : `You are slow. ${todo}`} />;
+  const todo = grown >= 100 ? HUD.food.ready : watered ? HUD.food.growing(grown) : HUD.food.water;
+  return <Mini icon={GAUGE_ICONS.food} label={HUD.food.label} tip={GAUGE_TIPS.food} value={pct > 0 ? HUD.food.hungry : HUD.food.starving} pct={pct} zone={zone} note={pct > 0 ? todo : HUD.food.slow(todo)} />;
 }
 
 /** Radiation taken in the solar flare. Shown from ARIA's warning until the all clear. */
@@ -204,7 +205,7 @@ function Radiation() {
   const stacked = useGame((s) => s.sim.work.bags === 0);
   if (!show) return null;
   const zone: Zone = outside && hit ? "danger" : pct > 0 || !stacked ? "caution" : "safe";
-  return <Mini icon={GAUGE_ICONS.radiation} label="Radiation" tip={GAUGE_TIPS.radiation} value={`${pct}%`} pct={pct} zone={zone} note={outside ? "Get inside!" : !stacked ? "The walls stop most of it. Stack the bags!" : hit ? "The bag shelter keeps you safe." : "Stay inside."} />;
+  return <Mini icon={GAUGE_ICONS.radiation} label={HUD.radiation.label} tip={GAUGE_TIPS.radiation} value={`${pct}%`} pct={pct} zone={zone} note={outside ? HUD.radiation.out : !stacked ? HUD.radiation.bags : hit ? HUD.radiation.safe : HUD.radiation.wait} />;
 }
 
 /** How long the air will last while it leaks. Shown once the air screen has been read, until the hole is patched. */
@@ -214,7 +215,7 @@ function TimeLeft() {
   const sols = useGame((s) => Math.round(Math.min(2, reserveSols(s.sim, areaOf(s.player))) * 10) / 10);
   if (!show) return null;
   const zone: Zone = sols > 1 ? "safe" : sols > 0.4 ? "caution" : "danger";
-  return <Mini icon={GAUGE_ICONS.time} label="Time left" tip={GAUGE_TIPS.time} value={sols >= 2 ? "2 sols or more" : `${sols.toFixed(1)} sols`} pct={sols * 50} zone={zone} note="Until the oxygen is too low. Patch the hole!" />;
+  return <Mini icon={GAUGE_ICONS.time} label={HUD.time.label} tip={GAUGE_TIPS.time} value={sols >= 2 ? HUD.time.plenty : HUD.time.sols(sols.toFixed(1))} pct={sols * 50} zone={zone} note={HUD.time.note} />;
 }
 
 function Gauges() {
@@ -232,31 +233,31 @@ function Gauges() {
     <div className="relative flex w-full flex-wrap gap-1.5 md:grid md:w-64 md:grid-cols-1 md:gap-2">
       <Gauge
         icon={GAUGE_ICONS.oxygen}
-        label="Oxygen"
+        label={HUD.oxygen.label}
         tip={GAUGE_TIPS.oxygen}
         value={o2}
         digits={1}
         trend={o2Trend}
         zone={o2z}
-        status={o2z === "safe" ? "Good" : o2 > 21 ? "Too much" : o2z === "danger" ? "Danger!" : "Getting low"}
+        status={o2z === "safe" ? HUD.oxygen.good : o2 > 21 ? HUD.oxygen.high : o2z === "danger" ? HUD.oxygen.danger : HUD.oxygen.low}
         min={15}
         max={26}
-        bands={[[15, "danger"], [17.5, "caution"], [19.5, "safe"], [23.5, "caution"]]}
-        note={learning ? "The air you breathe in. Good from 19.5 to 23.5%." : undefined}
+        bands={[[15, "danger"], [O2_DANGER_PCT.value, "caution"], [O2_SAFE_MIN_PCT.value, "safe"], [O2_SAFE_MAX_PCT.value, "caution"]]}
+        note={learning ? HUD.oxygen.note : undefined}
       />
       <Gauge
         icon={GAUGE_ICONS.co2}
-        label="CO₂"
+        label={HUD.co2.label}
         tip={GAUGE_TIPS.co2}
         value={co2}
         digits={2}
         trend={co2Trend}
         zone={co2z}
-        status={co2z === "safe" ? "Good" : co2z === "danger" ? "Danger!" : "Too much"}
+        status={co2z === "safe" ? HUD.co2.good : co2z === "danger" ? HUD.co2.danger : HUD.co2.high}
         min={0}
         max={4}
-        bands={[[0, "safe"], [0.7, "caution"], [1.3, "danger"]]}
-        note={learning ? "The air you breathe out. Good below 0.7%." : undefined}
+        bands={[[0, "safe"], [CO2_SAFE_MAX_PCT.value, "caution"], [CO2_DANGER_PCT.value, "danger"]]}
+        note={learning ? HUD.co2.note : undefined}
       />
       <Room />
       <Suit />
@@ -291,12 +292,12 @@ function TopBar() {
       {/* On a phone the name gives way so the bar fits on one row; the page title still carries it. */}
       <p className="font-display text-lg leading-tight max-sm:hidden">
         <Link href="/" className="font-stencil text-xl uppercase hover:text-sunset">
-          Mission Vigil
+          {HUD.bar.name}
         </Link>
         <span className="ml-3 hidden text-sand/70 sm:inline">{SOLS[Math.min(Math.floor(tenMinutes / 144), SOLS.length - 1)].title}</span>
       </p>
       <div className="order-last w-full md:order-none md:w-auto md:flex-1">
-        <div className="relative h-1 rounded-full bg-sand/15 sm:h-2" role="progressbar" aria-label="Time until the big air system is ready" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
+        <div className="relative h-1 rounded-full bg-sand/15 sm:h-2" role="progressbar" aria-label={HUD.bar.progress} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
           {NIGHTS.map((from) => (
             <div
               key={from}
@@ -305,7 +306,7 @@ function TopBar() {
                 left: pct(from),
                 width: pct(Math.min(0.5, CHAPTER_1_SOLS.value - from)),
               }}
-              title="Night"
+              title={HUD.bar.night}
             />
           ))}
           {stormKnown && (
@@ -315,7 +316,7 @@ function TopBar() {
                 left: pct(STORM.from),
                 width: pct(STORM.to - STORM.from),
               }}
-              title="Dust storm"
+              title={HUD.bar.storm}
             />
           )}
           {flareKnown && (
@@ -325,7 +326,7 @@ function TopBar() {
                 left: pct(FLARE.from),
                 width: pct(FLARE.to - FLARE.from),
               }}
-              title="Solar flare"
+              title={HUD.bar.flare}
             />
           )}
           <div className="absolute inset-y-0 left-0 rounded-full bg-sand/80" style={{ width: `${progress}%` }} />
@@ -335,22 +336,22 @@ function TopBar() {
         <span aria-hidden className="mr-1.5 text-sulfur">
           <Icon name={day ? "sun" : "moon"} className="size-[0.9em]" />
         </span>
-        Sol {Math.floor(tenMinutes / 144) + 1}, {clock}
+        {HUD.bar.clock(Math.floor(tenMinutes / 144) + 1, clock)}
       </p>
-      <p key={parts} className="pop font-display text-xl font-bold text-sulfur tabular-nums md:text-2xl" title="Parts. Spend them at the 3D printer.">
-        <span aria-hidden>⬢</span> {parts} <span className="text-base font-normal text-sand/70 max-sm:sr-only">parts</span>
+      <p key={parts} className="pop font-display text-xl font-bold text-sulfur tabular-nums md:text-2xl" title={HUD.bar.partsTip}>
+        <span aria-hidden>⬢</span> {parts} <span className="text-base font-normal text-sand/70 max-sm:sr-only">{HUD.bar.parts}</span>
       </p>
       <div className="ml-auto flex gap-1.5 sm:ml-0 sm:gap-2">
-      <Learn className={QUIET} />
-      <button type="button" onClick={toggleMute} aria-pressed={!muted} className={QUIET}>
-        <Icon name={muted ? "mute" : "sound"} className="size-[1.1em] sm:mr-1.5" />
-        {/* On a phone the picture alone keeps the bar on one row; screen readers still hear the words. */}
-        <span className="max-sm:sr-only">{muted ? "Sound off" : "Sound on"}</span>
-      </button>
-      <button type="button" onClick={togglePause} className={QUIET}>
-        <Icon name={paused ? "play" : "pause"} className="size-[1.1em] sm:mr-1.5" />
-        <span className="max-sm:sr-only">{paused ? "Play" : "Pause"}</span>
-      </button>
+        <Learn className={QUIET} />
+        <button type="button" onClick={toggleMute} aria-pressed={!muted} className={QUIET}>
+          <Icon name={muted ? "mute" : "sound"} className="size-[1.1em] sm:mr-1.5" />
+          {/* On a phone the picture alone keeps the bar on one row; screen readers still hear the words. */}
+          <span className="max-sm:sr-only">{muted ? HUD.bar.soundOff : HUD.bar.soundOn}</span>
+        </button>
+        <button type="button" onClick={togglePause} className={QUIET}>
+          <Icon name={paused ? "play" : "pause"} className="size-[1.1em] sm:mr-1.5" />
+          <span className="max-sm:sr-only">{paused ? HUD.bar.play : HUD.bar.pause}</span>
+        </button>
       </div>
     </header>
   );
@@ -376,13 +377,13 @@ function Jobs({ compact }: { compact?: boolean }) {
       </span>
       <span className="flex-1">
         {job.label}
-        {count(job) > 1 && <span className="text-sand/60"> ({count(job)} to find)</span>}
+        {count(job) > 1 && <span className="text-sand/60"> {HUD.jobs.toFind(count(job))}</span>}
       </span>
       {job.parts > 0 && <span className="font-display text-sulfur tabular-nums">+{job.parts}</span>}
     </>
   );
   const more = blue.length > 2 && <p className="mt-1 pl-9 text-sm text-sand/60">{MORE_JOBS(blue.length - 2)}</p>;
-  const hint = tutorial && <p className="mt-2 border-t border-sand/10 pt-2 text-sm text-sand/70">{compact ? "Tap where you want to go. Tap a machine to use it." : "Walk with the arrow keys or W A S D, or click where you want to go."}</p>;
+  const hint = tutorial && <p className="mt-2 border-t border-sand/10 pt-2 text-sm text-sand/70">{compact ? HUD.jobs.hintTap : HUD.jobs.hintKeys}</p>;
 
   // On a phone only the next job shows, as one pill under the scene. Tap it for the rest.
   if (compact)
@@ -413,8 +414,8 @@ function Jobs({ compact }: { compact?: boolean }) {
     );
 
   return (
-    <section className={`${PANEL} p-3`} aria-label="Jobs">
-      <h2 className="font-display text-xl font-semibold">Jobs</h2>
+    <section className={`${PANEL} p-3`} aria-label={HUD.jobs.title}>
+      <h2 className="font-display text-xl font-semibold">{HUD.jobs.title}</h2>
       {!tutorial && todo.every((job) => job.side) && <p className="text-sm text-sunset">{IDLE_HINT}</p>}
       <ul className="mt-1 flex flex-col gap-1">
         {unique.map((job) => (
@@ -438,7 +439,7 @@ function Cells({ system, name }: { system: System; name: string }) {
         <button
           key={i}
           type="button"
-          aria-label={`Give the ${name} ${i + 1} power`}
+          aria-label={HUD.power.give(name, i + 1)}
           aria-pressed={i < cells}
           // Tapping the last lit bar takes it away again.
           onClick={() => setCells(system, i + 1 === cells ? i : i + 1)}
@@ -459,63 +460,33 @@ function PowerBox() {
   const heater = useGame((s) => seen(s.sim, "night"));
   const scrubberDown = useGame((s) => s.sim.work.scrubber > 0);
   if (!open) return null;
-  const full = "To give a machine more power, take some back from another.";
-  const note =
-    used > power
-      ? "Too many machines are on, so they all run slow. Tap a lit bar to take power back."
-      : night && used === power
-        ? `It is night, so the solar panels are asleep. ${full}`
-        : dusty
-          ? "Dusty solar panels give no power. Clean them to get more."
-          : night
-            ? "It is night. The solar panels sleep until the sun comes up."
-            : used === power
-              ? `All the power is in use. ${full}`
-              : "Tap a bar to give power. Tap it again to take it back.";
-  const row = "flex items-center justify-between gap-3 border-t border-sand/10 py-2";
+  const note = used > power ? HUD.power.over : night && used === power ? HUD.power.nightFull : dusty ? HUD.power.dusty : night ? HUD.power.night : used === power ? HUD.power.full : HUD.power.tap;
   return (
-    <section className={`${PANEL} border-sunset px-4 pt-3 pb-1`} aria-label="Power box">
+    <section className={`${PANEL} border-sunset px-4 pt-3 pb-1`} aria-label={HUD.power.title}>
       <div className="flex items-baseline justify-between gap-3 pb-2">
         <h2 className="font-display text-xl font-semibold">
           <Icon name={ICONS.power} className="mr-1.5 size-[1.1em]" />
-          Power box
+          {HUD.power.title}
         </h2>
-        <p className={used > power ? "text-flare" : used < power ? "text-sulfur" : "text-sand/70"}>
-          Using {used} of {power} power
-        </p>
+        <p className={used > power ? "text-flare" : used < power ? "text-sulfur" : "text-sand/70"}>{HUD.power.using(used, power)}</p>
       </div>
-      <div className={row}>
-        <div>
-          <h3 className="font-semibold">
-            <Icon name={GAUGE_ICONS.scrubber} className="mr-1.5 size-[1.1em]" />
-            Air cleaner
-          </h3>
-          <p className={`text-sm ${scrubberDown ? "text-flare" : "text-sand/70"}`}>{scrubberDown ? "Stopped. It needs a new filter." : "Takes CO₂ out of the air."}</p>
-        </div>
-        <Cells system="scrubber" name="air cleaner" />
-      </div>
-      <div className={row}>
-        <div>
-          <h3 className="font-semibold">
-            <Icon name={GAUGE_ICONS.oxygen} className="mr-1.5 size-[1.1em]" />
-            Oxygen maker
-          </h3>
-          <p className="text-sm text-sand/70">Makes new oxygen.</p>
-        </div>
-        <Cells system="oxygen" name="oxygen maker" />
-      </div>
-      {heater && (
-        <div className={row}>
-          <div>
-            <h3 className="font-semibold">
-              <Icon name={GAUGE_ICONS.heater} className="mr-1.5 size-[1.1em]" />
-              Heater
-            </h3>
-            <p className="text-sm text-sand/70">Keeps the room warm when the sun is gone.</p>
+      {/* The heater joins the box on the first night. */}
+      {SYSTEMS.filter((id) => id !== "heater" || heater).map((id) => {
+        const machine = HUD.power.machines[id];
+        const stopped = id === "scrubber" && scrubberDown;
+        return (
+          <div key={id} className="flex items-center justify-between gap-3 border-t border-sand/10 py-2">
+            <div>
+              <h3 className="font-semibold">
+                <Icon name={GAUGE_ICONS[id]} className="mr-1.5 size-[1.1em]" />
+                {machine.name}
+              </h3>
+              <p className={`text-sm ${stopped ? "text-flare" : "text-sand/70"}`}>{stopped ? HUD.power.machines.scrubber.stopped : machine.does}</p>
+            </div>
+            <Cells system={id} name={machine.name.toLowerCase()} />
           </div>
-          <Cells system="heater" name="heater" />
-        </div>
-      )}
+        );
+      })}
       <p className={`border-t border-sand/10 py-2 text-sm ${used > power ? "text-flare" : "text-sand/70"}`}>{note}</p>
     </section>
   );
@@ -529,13 +500,13 @@ function Printer() {
   const buy = useGame((s) => s.buy);
   if (!open) return null;
   return (
-    <section className={`${PANEL} border-sunset px-4 pt-3 pb-1`} aria-label="3D printer">
+    <section className={`${PANEL} border-sunset px-4 pt-3 pb-1`} aria-label={HUD.printer.title}>
       <div className="flex items-baseline justify-between gap-3 pb-2">
         <h2 className="font-display text-xl font-semibold">
           <Icon name={ICONS.printer} className="mr-1.5 size-[1.1em]" />
-          3D printer
+          {HUD.printer.title}
         </h2>
-        <p className="text-sand/70">Turn parts into upgrades</p>
+        <p className="text-sand/70">{HUD.printer.intro}</p>
       </div>
       {(Object.keys(UPGRADES) as Upgrade[]).map((id) => (
         <div key={id} className="flex items-center justify-between gap-3 border-t border-sand/10 py-1.5">
@@ -547,10 +518,10 @@ function Printer() {
             <p className="text-sm leading-tight text-sand/70">{UPGRADES[id].text}</p>
           </div>
           {owned.includes(id) ? (
-            <p className="font-display text-lg text-safe">Made!</p>
+            <p className="font-display text-lg text-safe">{HUD.printer.made}</p>
           ) : (
             <button type="button" onClick={() => buy(id)} disabled={parts < UPGRADE_COST[id]} className={`${BUTTON} py-1 whitespace-nowrap`}>
-              {parts < UPGRADE_COST[id] ? `Needs ${UPGRADE_COST[id]}` : `Print for ${UPGRADE_COST[id]}`}
+              {parts < UPGRADE_COST[id] ? HUD.printer.needs(UPGRADE_COST[id]) : HUD.printer.print(UPGRADE_COST[id])}
             </button>
           )}
         </div>
@@ -623,13 +594,13 @@ function Dialog() {
             {lines[line]}
           </p>
           <div className="mt-3 flex items-center justify-between gap-3">
-            <p className="flex gap-1.5" aria-label={`Line ${line + 1} of ${lines.length}`}>
+            <p className="flex gap-1.5" aria-label={HUD.dialog.line(line + 1, lines.length)}>
               {lines.map((_, i) => (
                 <span key={i} className={`h-1.5 w-4 rounded-full ${i <= line ? "bg-sunset" : "bg-sand/20"}`} />
               ))}
             </p>
             <button type="button" onClick={interact} className={BUTTON} autoFocus>
-              {last ? "OK" : "Next"}
+              {last ? HUD.dialog.ok : HUD.dialog.next}
             </button>
           </div>
         </div>
@@ -693,21 +664,17 @@ function FactCard() {
         </summary>
         <div className={`${PANEL} mt-1.5 max-w-sm p-3 text-sm leading-snug`}>
           <p>{FACTS[id].text}</p>
-          <p className="mt-1 text-sand/60">
-            Card {count} of {FACT_IDS.length}
-          </p>
+          <p className="mt-1 text-sand/60">{HUD.fact.card(count, FACT_IDS.length)}</p>
         </div>
       </details>
-    <aside key={count} className={`${PANEL} toast pointer-events-none! ${waiting} border-sulfur/60 p-3 max-md:hidden md:absolute md:top-20 md:left-1/2 md:w-[28rem] md:-translate-x-1/2`} role="status">
-      <p className="flex justify-between font-display text-sulfur">
-        <span>Did you know?</span>
-        <span>
-          Card {count} of {FACT_IDS.length}
-        </span>
-      </p>
-      <h2 className="font-display text-xl font-semibold">{FACTS[id].title}</h2>
-      <p className="text-sm leading-snug md:text-base">{FACTS[id].text}</p>
-    </aside>
+      <aside key={count} className={`${PANEL} toast pointer-events-none! ${waiting} border-sulfur/60 p-3 max-md:hidden md:absolute md:top-20 md:left-1/2 md:w-[28rem] md:-translate-x-1/2`} role="status">
+        <p className="flex justify-between font-display text-sulfur">
+          <span>{HUD.fact.title}</span>
+          <span>{HUD.fact.card(count, FACT_IDS.length)}</span>
+        </p>
+        <h2 className="font-display text-xl font-semibold">{FACTS[id].title}</h2>
+        <p className="text-sm leading-snug md:text-base">{FACTS[id].text}</p>
+      </aside>
     </>
   );
 }
@@ -737,9 +704,7 @@ function SolCard() {
   return (
     <div className="rise pointer-events-none absolute inset-x-0 top-[42%] px-2 text-center md:top-1/4">
       <p className={`${PANEL} inline-block px-6 py-3`}>
-        <span className="block font-display text-xl text-sunset">
-          Sol {sol + 1} of {SOLS.length}
-        </span>
+        <span className="block font-display text-xl text-sunset">{HUD.sol(sol + 1, SOLS.length)}</span>
         <span className="block font-stencil text-5xl leading-none uppercase md:text-7xl">{SOLS[sol].title}</span>
         <span className="block font-display text-xl text-sand/70">{SOLS[sol].focus}</span>
       </p>
@@ -761,7 +726,7 @@ function FlareAlert() {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-20 flex justify-center px-2 md:bottom-[36%]">
       <p className={`${PANEL} border-2 border-flare px-4 py-2 text-center font-display text-2xl font-bold ${outside ? "alarm-border" : ""}`}>
-        <span role="status">{coming ? "Solar flare coming!" : "Solar flare!"} {outside ? "Get inside!" : "Stay inside."}</span>
+        <span role="status">{coming ? HUD.flare.coming : HUD.flare.now} {outside ? HUD.flare.out : HUD.flare.inside}</span>
         <span aria-hidden className="ml-3 text-flare tabular-nums">
           {Math.abs(seconds)}
         </span>
@@ -777,10 +742,10 @@ function Paused() {
   return (
     <div className="absolute inset-0 flex items-center justify-center bg-dusk/60 p-4">
       <div className={`${PANEL} max-w-sm p-5 text-center`}>
-        <h2 className="font-display text-4xl font-bold">Paused</h2>
-        <p className="mt-2">Walk with the arrow keys or W A S D. Press E to use things. Press P to pause.</p>
+        <h2 className="font-display text-4xl font-bold">{HUD.paused.title}</h2>
+        <p className="mt-2">{HUD.paused.keys}</p>
         <button type="button" onClick={togglePause} className={`${BUTTON} mt-4`}>
-          Play
+          {HUD.paused.play}
         </button>
         <details className="mt-4">
           <summary className="cursor-pointer font-display text-lg text-sunset">{SPACE.title}</summary>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Atkinson_Hyperlegible_Next, Big_Shoulders, Big_Shoulders_Stencil } from "next/font/google";
+import { NAME } from "@/engine/story";
 import "./globals.css";
 
 // Atkinson Hyperlegible is built for easy reading, which suits a student audience.
@@ -10,7 +11,7 @@ const display = Big_Shoulders({ subsets: ["latin"], variable: "--ff-display", ad
 const stencil = Big_Shoulders_Stencil({ subsets: ["latin"], variable: "--ff-stencil", adjustFontFallback: false });
 
 export const metadata: Metadata = {
-  title: "MISSION VIGIL: Junior Astronaut Mission Trainer",
+  title: NAME,
   description: "Wake up alone in a Mars outpost and keep it alive. A mission trainer built on NASA research.",
 };
 

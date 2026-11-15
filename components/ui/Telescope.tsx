@@ -185,11 +185,16 @@ function NightSky() {
           <button type="button" className={pad} onClick={() => look(...ARROWS.ArrowLeft)} aria-label={TELESCOPE.look.left}>
             ◀
           </button>
-          <button type="button" className={`${pad} text-base`} onClick={() => {
+          <button
+            type="button"
+            className={`${pad} text-base`}
+            onClick={() => {
               // Zooming in centres whatever is in your sights, so it stays in them.
               if (!zoom && target) setView(AT[target]);
               setZoom(zoom ? 0 : 1);
-            }} aria-label={zoom ? TELESCOPE.zoomOut : TELESCOPE.zoomIn}>
+            }}
+            aria-label={zoom ? TELESCOPE.zoomOut : TELESCOPE.zoomIn}
+          >
             {zoom ? "−" : "+"}
           </button>
           <button type="button" className={pad} onClick={() => look(...ARROWS.ArrowRight)} aria-label={TELESCOPE.look.right}>
@@ -228,8 +233,10 @@ export function Telescope() {
   return (
     <section className="rise rounded-2xl border border-sunset bg-dusk/90 px-4 pt-3 pb-2 backdrop-blur-md" aria-label={TELESCOPE.title}>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-display text-xl font-semibold"><Icon name="telescope" className="mr-1.5" />
-          {TELESCOPE.title}</h2>
+        <h2 className="font-display text-xl font-semibold">
+          <Icon name="telescope" className="mr-1.5" />
+          {TELESCOPE.title}
+        </h2>
         <div className="flex gap-1">
           {tabButton("sky", TELESCOPE.sky)}
           {tabButton("system", TELESCOPE.system)}

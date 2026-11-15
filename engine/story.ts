@@ -1,3 +1,4 @@
+import { CO2_SAFE_MAX_PCT, O2_SAFE_MAX_PCT, O2_SAFE_MIN_PCT } from "./constants.ts";
 import type { BadgeId } from "./scoring.ts";
 import type { FactId, Failure, MessageId, SecretId, StationId, Upgrade } from "./simulate.ts";
 
@@ -286,7 +287,7 @@ export const GAUGE_ICONS = { oxygen: "bubbles", co2: "wind", room: "thermometer"
 
 /** What ARIA says when a gauge is tapped on a phone: what it measures and what to do. */
 export const GAUGE_TIPS = {
-  oxygen: "You breathe in oxygen. Keep it between 19.5% and 23.5%. The oxygen maker makes more.",
+  oxygen: `You breathe in oxygen. Keep it between ${O2_SAFE_MIN_PCT.value}% and ${O2_SAFE_MAX_PCT.value}%. The oxygen maker makes more.`,
   co2: "CO₂ is the gas you breathe out. Too much makes you sick. The air cleaner takes it out.",
   room: "Mars is very cold. When the sun is gone, give power to the heater.",
   suit: "Your suit has its own air. Go back inside before it runs out.",
@@ -295,13 +296,26 @@ export const GAUGE_TIPS = {
   radiation: "The flare sends out radiation. The walls and the bag shelter keep you safe.",
 } as const;
 
+/** The game's full name, used the same everywhere, as the hackathon rules ask. */
+export const NAME = "MISSION VIGIL: Junior Astronaut Mission Trainer";
+
 /** The title screen. */
 export const TITLE = {
+  name: ["Mission", "Vigil"],
+  subtitle: "Junior astronaut mission trainer",
+  chapter: (code: string) => `Chapter ${code}`,
+  difficulty: (n: number, of: number) => `Difficulty ${n} of ${of}`,
   tagline: "Six chapters. One way home.",
   intro: "You wake up alone on Mars, and the base is asleep. Wake it up, keep it alive, and find your way home to Earth.",
   start: "Start Chapter 1",
   soon: "Coming soon",
   chapters: "The chapters",
+} as const;
+
+/** The 3D base: its name for screen readers, and the line shown while it loads. */
+export const SCENE = {
+  label: "The outpost on the surface of Mars",
+  loading: "ARIA is waking up the base…",
 } as const;
 
 /**
@@ -331,13 +345,77 @@ export const SOLS: readonly { readonly title: string; readonly focus: string; re
   { title: "Go for Home", focus: "The call home", opens: "lastsol" },
 ];
 
-/** Shown in the job list when every job that is left is a blue one. */
 /** The job list shows two blue jobs and counts the rest, so it stays short. */
 export const MORE_JOBS = (count: number) => `and ${count} more blue ${count === 1 ? "job" : "jobs"}`;
 /** The job pill on a phone: the next job, and how many more are in the list. */
 export const NEXT_JOB = "Next job:";
 export const OTHER_JOBS = (count: number) => `${count} more`;
+/** Shown in the job list when every job that is left is a blue one. */
 export const IDLE_HINT = "No yellow jobs right now. Do a blue job to earn parts!";
+
+/** The HUD: gauges, the top bar, the job list, the power box, the printer, and the pop-ups over the base. */
+export const HUD = {
+  rising: "and going up",
+  falling: "and going down",
+  meterText: (value: string, status: string) => `${value} percent, ${status}`,
+  oxygen: { label: "Oxygen", good: "Good", high: "Too much", low: "Getting low", danger: "Danger!", note: `The air you breathe in. Good from ${O2_SAFE_MIN_PCT.value} to ${O2_SAFE_MAX_PCT.value}%.` },
+  co2: { label: "CO₂", good: "Good", high: "Too much", danger: "Danger!", note: `The air you breathe out. Good below ${CO2_SAFE_MAX_PCT.value}%.` },
+  room: { label: "Room", warm: "Warm.", heating: "Warm. The heater is on.", cool: "Getting cold. Use the heater.", freezing: "Freezing! Give the heater power." },
+  suit: { label: "Suit air", filling: "Filling up inside.", fine: "You are breathing suit air.", low: "Go back to the airlock!" },
+  food: {
+    label: "Food",
+    hungry: "Hungry",
+    starving: "Very hungry",
+    ready: "The salad is ready. Eat!",
+    growing: (pct: number) => `The salad is growing: ${pct}%`,
+    water: "Water the salad plants.",
+    slow: (todo: string) => `You are slow. ${todo}`,
+  },
+  radiation: { label: "Radiation", out: "Get inside!", bags: "The walls stop most of it. Stack the bags!", safe: "The bag shelter keeps you safe.", wait: "Stay inside." },
+  time: { label: "Time left", plenty: "2 sols or more", sols: (sols: string) => `${sols} sols`, note: "Until the oxygen is too low. Patch the hole!" },
+  bar: {
+    name: "Mission Vigil",
+    progress: "Time until the big air system is ready",
+    night: "Night",
+    storm: "Dust storm",
+    flare: "Solar flare",
+    clock: (sol: number, time: string) => `Sol ${sol}, ${time}`,
+    parts: "parts",
+    partsTip: "Parts. Spend them at the 3D printer.",
+    soundOn: "Sound on",
+    soundOff: "Sound off",
+    play: "Play",
+    pause: "Pause",
+  },
+  jobs: {
+    title: "Jobs",
+    toFind: (count: number) => `(${count} to find)`,
+    hintTap: "Tap where you want to go. Tap a machine to use it.",
+    hintKeys: "Walk with the arrow keys or W A S D, or click where you want to go.",
+  },
+  power: {
+    title: "Power box",
+    using: (used: number, of: number) => `Using ${used} of ${of} power`,
+    give: (machine: string, cells: number) => `Give the ${machine} ${cells} power`,
+    machines: {
+      scrubber: { name: "Air cleaner", does: "Takes CO₂ out of the air.", stopped: "Stopped. It needs a new filter." },
+      oxygen: { name: "Oxygen maker", does: "Makes new oxygen." },
+      heater: { name: "Heater", does: "Keeps the room warm when the sun is gone." },
+    },
+    over: "Too many machines are on, so they all run slow. Tap a lit bar to take power back.",
+    nightFull: "It is night, so the solar panels are asleep. To give a machine more power, take some back from another.",
+    dusty: "Dusty solar panels give no power. Clean them to get more.",
+    night: "It is night. The solar panels sleep until the sun comes up.",
+    full: "All the power is in use. To give a machine more power, take some back from another.",
+    tap: "Tap a bar to give power. Tap it again to take it back.",
+  },
+  printer: { title: "3D printer", intro: "Turn parts into upgrades", made: "Made!", needs: (cost: number) => `Needs ${cost}`, print: (cost: number) => `Print for ${cost}` },
+  dialog: { line: (n: number, of: number) => `Line ${n} of ${of}`, next: "Next", ok: "OK" },
+  fact: { title: "Did you know?", card: (n: number, of: number) => `Card ${n} of ${of}` },
+  sol: (n: number, of: number) => `Sol ${n} of ${of}`,
+  flare: { coming: "Solar flare coming!", now: "Solar flare!", out: "Get inside!", inside: "Stay inside." },
+  paused: { title: "Paused", keys: "Walk with the arrow keys or W A S D. Press E to use things. Press P to pause.", play: "Play" },
+} as const;
 
 /** Extra goals shown at the end of a won chapter. */
 export const BADGES: Readonly<Record<BadgeId, { readonly icon: IconName; readonly name: string; readonly how: string }>> = {
@@ -402,8 +480,35 @@ export const FAILURES: Readonly<Record<Failure, Debrief>> = {
   },
 };
 
+/** The failure screen, around the story in FAILURES. */
+export const FAILED = {
+  stopped: "Mission stopped",
+  oxygenLeft: (pct: string) => `Look: there was still oxygen left, ${pct}%. The CO₂ got you first.`,
+  tryThis: "Try this:",
+  check: "Quick check before you go again",
+  rewind: "Try again from ARIA's last message",
+  restart: "Start the chapter again",
+} as const;
+
+/** A quiz question's replies. */
+export const ANSWER = { right: "Yes!", found: "That is it.", wrong: "Not quite. Try another one!" } as const;
+
 /** The win screen: six cards, one tap each. */
 export const SUCCESS = {
+  progress: "End of mission",
+  stars: (n: number) => `${n} of 3 stars`,
+  partsOf: (n: number, of: number) => `${n} of ${of}`,
+  best: (parts: number) => `Your best is ${parts} parts.`,
+  question: (n: number, of: number) => `Question ${n} of ${of}`,
+  wingsSoFar: (n: number) => `${n} wings so far`,
+  wingRule: "A right first pick earns a wing.",
+  nextQuestion: "Next question",
+  finish: "Finish the call",
+  collected: (title: string, found: number, of: number) => `${title}: ${found} of ${of}`,
+  notFound: (name: string) => `${name}, not found yet`,
+  factCard: "Fact card",
+  home: "Back to the start",
+  again: "Play again",
   title: "The base is alive!",
   aria: "You did it! You kept the base alive for 5 sols. Real crews do these jobs too.",
   toStats: "See how you did",
@@ -435,8 +540,11 @@ export const SUCCESS = {
 export const RANKS = ["Cadet", "Astronaut", "Commander"] as const;
 
 /**
- * The final check with Earth. Questions without a `card` are the main lessons of
- * the mission; the rest are about fact cards, and are asked only if the card was found.
+ * The final check with Earth, and the quick check on the failure screen. Questions
+ * without a `card` are the main lessons of the mission; `about` ties a lesson to the
+ * way a mission can stop. The rest are about fact cards, one for every card, and are
+ * asked only if the card was found. The check is drawn at random from all of these
+ * (see `finalCheck` in scoring.ts), so write each question to stand on its own.
  */
 export const QUIZ: readonly Question[] = [
   {
@@ -542,6 +650,182 @@ export const QUIZ: readonly Question[] = [
     why: "It drove on Mars from 2004 to 2018. Good machines, well looked after, can last a very long time.",
     card: "rover",
   },
+  // More main lessons: a second (or third) way to learn each thing that can stop the mission.
+  {
+    prompt: "The CO₂ meter is red. Which machine helps?",
+    choices: ["The air cleaner", "The heater", "The oxygen maker"],
+    answer: 0,
+    why: "The air cleaner takes CO₂ out of the air. Give it more power, and swap its filter when it is full.",
+    about: "co2",
+  },
+  {
+    prompt: "The oxygen is getting low. What can you do?",
+    choices: ["Give power to the oxygen maker", "Turn up the heater", "Open the outside door"],
+    answer: 0,
+    why: "The oxygen maker makes new oxygen. Clean solar panels give it more power to use.",
+    about: "o2",
+  },
+  {
+    prompt: "Air is leaking out of the base. What do you do first?",
+    choices: ["Run outside right away", "Read the air screen to see how much time you have", "Turn off every machine"],
+    answer: 1,
+    why: "Real crews warn, gather, then work. First they find out how much time they have. Then they fix the leak.",
+    about: "o2",
+  },
+  {
+    prompt: "Why does the base get cold in a dust storm, even in the daytime?",
+    choices: ["The wind opens the doors", "The dust hides the Sun", "The heater breaks"],
+    answer: 1,
+    why: "The dust hides the Sun, so the walls stop warming up. Give the heater power until the storm has passed.",
+    about: "cold",
+  },
+  {
+    prompt: "Where is the safest place to be in a solar flare?",
+    choices: ["Out by the rover", "In the airlock", "Inside, behind the bag shelter"],
+    answer: 2,
+    why: "The walls stop most of the radiation, and the stack of bags stops the rest.",
+    about: "radiation",
+  },
+  {
+    prompt: "Where does your spacesuit get more air?",
+    choices: ["Inside the base", "From the solar panels", "From the Mars wind"],
+    answer: 0,
+    why: "The suit fills up again inside the base. Outside, you only have the air that is in the suit.",
+    about: "suit",
+  },
+  {
+    prompt: "Why should you water the salad early?",
+    choices: ["So the soil turns red", "So it is ready when you get hungry", "So ARIA can drink it"],
+    answer: 1,
+    why: "Plants need time to grow. Water them early, and the salad is ready when your tummy rumbles.",
+  },
+  {
+    prompt: "The machines ask for more power than the base has. What happens?",
+    choices: ["All the machines run slow", "The base makes extra power", "Nothing at all"],
+    answer: 0,
+    why: "There is only so much power to share. Ask for too much, and every machine slows down. Choose what matters most.",
+  },
+
+  // A question for every fact card, asked only of a player who found that card.
+  {
+    prompt: "What is a sol?",
+    choices: ["A kind of Mars rock", "A day on Mars", "A year on Mars"],
+    answer: 1,
+    why: "A sol is one day on Mars. It is about 40 minutes longer than a day on Earth.",
+    card: "sol",
+  },
+  {
+    prompt: "About how much CO₂ do you breathe out every day?",
+    choices: ["About 1 kg", "None at all", "About 100 kg"],
+    answer: 0,
+    why: "About 1 kg every day. In a closed room it has nowhere to go, so a machine has to take it out.",
+    card: "co2",
+  },
+  {
+    prompt: "What did the MOXIE machine make on Mars?",
+    choices: ["Water", "Oxygen, out of Mars air", "Bricks"],
+    answer: 1,
+    why: "MOXIE rode to Mars on the Perseverance rover. It made 122 grams of oxygen out of Mars air.",
+    card: "moxie",
+  },
+  {
+    prompt: "Why did the InSight lander run out of power?",
+    choices: ["A wheel broke", "It got too hot", "Dust covered its solar panels"],
+    answer: 2,
+    why: "Dust slowly covered its solar panels. In 2022 it had no power left. That is why you keep yours clean!",
+    card: "insight",
+  },
+  {
+    prompt: "What does the Perseverance rover do with bits of Mars rock?",
+    choices: ["Seals them in tubes for Earth", "Throws them away", "Burns them for power"],
+    answer: 0,
+    why: "It drills out bits of rock and seals them in tubes, so they can be sent to Earth one day.",
+    card: "samples",
+  },
+  {
+    prompt: "About how long does the air in a NASA spacesuit last?",
+    choices: ["About 7 minutes", "About 7 hours", "About 7 days"],
+    answer: 1,
+    why: "About 7 hours. A spacesuit is like a tiny spaceship for one person.",
+    card: "suit",
+  },
+  {
+    prompt: "In 1970 the air on Apollo 13 filled with CO₂. How did the crew fix it?",
+    choices: ["They opened a window", "They held their breath", "They built a filter holder from a bag, cardboard and tape"],
+    answer: 2,
+    why: "They used what they had on board, and it worked! Clever fixes with spare parts can save a mission.",
+    card: "apollo13",
+  },
+  {
+    prompt: "Air on Earth is about 21% oxygen. Below how much is it not safe to work in?",
+    choices: ["19.5%", "5%", "50%"],
+    answer: 0,
+    why: "Below 19.5% oxygen, air is not safe to work in. That is why the oxygen meter turns yellow there.",
+    card: "thinair",
+  },
+  {
+    prompt: "What did the Space Station's 3D printer make in 2014?",
+    choices: ["A pizza", "A wrench, from a design sent up from Earth", "A new spacesuit"],
+    answer: 1,
+    why: "It printed a wrench from a design sent up from Earth. Like your printer, it turns plans into tools.",
+    card: "printer",
+  },
+  {
+    prompt: "How does the Perseverance rover get power at night?",
+    choices: ["From moonlight", "From a long cable to Earth", "From a nuclear battery"],
+    answer: 2,
+    why: "Its nuclear battery makes power day and night, and its heat keeps the rover warm.",
+    card: "rtg",
+  },
+  {
+    prompt: "Which is colder?",
+    choices: ["A kitchen freezer, at −18 °C", "Mars on average, at about −59 °C", "They are just the same"],
+    answer: 1,
+    why: "Mars is far colder than a freezer. At one landing site, nights fell to −89 °C.",
+    card: "cold",
+  },
+  {
+    prompt: "In 2009, what cleaned the Spirit rover's solar panels?",
+    choices: ["A gust of Mars wind", "An astronaut", "A robot arm"],
+    answer: 0,
+    why: "A gust of wind blew the dust off, and Spirit got more power. A free car wash!",
+    card: "wind",
+  },
+  {
+    prompt: "About how much dry food does an astronaut eat every day?",
+    choices: ["About 6 kg", "About 0.6 kg", "About 60 kg"],
+    answer: 1,
+    why: "About 0.6 kg a day. On a long trip that adds up to a lot to carry, so growing some food helps.",
+    card: "food",
+  },
+  {
+    prompt: "Why is radiation a bigger problem on Mars than on Earth?",
+    choices: ["Mars is closer to the Sun", "Mars is red", "Mars has thin air and no magnetic shield"],
+    answer: 2,
+    why: "Earth's air and its magnetic field block most radiation from space. Mars has thin air and no such shield.",
+    card: "flare",
+  },
+  {
+    prompt: "What did the Perseverance rover see in the Mars sky in 2024?",
+    choices: ["A green glow: an aurora", "A rainbow", "A second Sun"],
+    answer: 0,
+    why: "After a storm on the Sun, the sky glowed green. It was the first aurora ever seen from the ground of another planet.",
+    card: "aurora",
+  },
+  {
+    prompt: "What do Space Station crews do on Saturdays?",
+    choices: ["Fly home for the weekend", "Clean the station", "Sleep all day"],
+    answer: 1,
+    why: "Saturday is cleaning day. They wipe the walls, vacuum up dust and clear the air vents, like your daily chores.",
+    card: "chores",
+  },
+  {
+    prompt: "From Mars, what does Earth look like after sunset?",
+    choices: ["A bright star", "A big blue ball that fills the sky", "You cannot see it"],
+    answer: 0,
+    why: "Earth looks like a bright evening star, with our Moon as a small star beside it.",
+    card: "earthstar",
+  },
 ];
 
 /** The map of the Sun, Earth and Mars. The numbers in it are worked out from real orbits for the day it is opened. */
@@ -623,6 +907,9 @@ export const POSTCARD = {
   privacy: "Your name stays on this computer. It is not saved or sent anywhere.",
   greetings: "Greetings from",
   mars: "MARS",
+  stamp: "5 SOLS",
+  postmark: ["MARS BASE", "SOL 5"],
+  trip: { from: "Mars", to: "Earth", km: (millionKm: number) => `${millionKm} million km` },
   hello: "Hello from Mars!",
   kept: "I kept the base alive for 5 sols.",
   to: "To: Earth",

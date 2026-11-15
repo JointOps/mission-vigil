@@ -169,9 +169,11 @@ const DRAW: Readonly<Record<IconName, ReactNode>> = {
 };
 
 /** One picture, sized by `className`. It is decoration: the words beside it are what a screen reader reads. */
-export function Icon({ name, className = "size-5" }: { name: IconName; className?: string }) {
+export function Icon({ name, className = "" }: { name: IconName; className?: string }) {
+  // Without a size class the picture would grow to fill its box, so it falls back to size-5.
+  const size = className.includes("size-") ? "" : "size-5";
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden className={`inline-block shrink-0 align-[-0.15em] ${className}`}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden className={`inline-block shrink-0 align-[-0.15em] ${size} ${className}`}>
       {DRAW[name]}
     </svg>
   );

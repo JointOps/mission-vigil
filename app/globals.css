@@ -62,6 +62,17 @@ body {
   animation: rise 0.25s ease-out;
 }
 
+/* The 3D loader fades in late, so a quick load never flashes it. */
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.fade-late {
+  animation: fade 0.4s ease-out 0.3s both;
+}
+
 /* The parts counter jumps when it grows. */
 @keyframes pop {
   30% {

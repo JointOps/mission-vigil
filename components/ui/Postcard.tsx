@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AU_KM, AU_LIGHT_MINUTES, earthToMarsAu } from "@/engine/orbits";
-import { POSTCARD } from "@/engine/story";
+import { CERTIFICATE, NAME, POSTCARD } from "@/engine/story";
 import { Icon } from "./Icon";
 
 // The postcard is drawn once on a canvas, so the picture on screen is exactly
@@ -174,7 +174,7 @@ function draw(c: CanvasRenderingContext2D, p: Card) {
   let x = 48 + c.measureText(p.rank).width + 30;
   for (let i = 0; i < 3; i++) star(c, x + i * 44, 657, 19, i < p.stars ? GOLD : "#d9c8ad");
   x += 3 * 44 + 10;
-  text(`${p.wings} of 5 wings`, x, 670, `400 28px ${body}`, INK);
+  text(CERTIFICATE.wings(p.wings), x, 670, `400 28px ${body}`, INK);
 
   // The line down the middle of every postcard.
   c.fillStyle = "#c9b79c";
@@ -203,8 +203,8 @@ function draw(c: CanvasRenderingContext2D, p: Card) {
   disc(c, sx + 90, sy + 96, 6, "#9a4f2e");
   disc(c, sx + 84, sy + 64, 4, "#9a4f2e");
   c.textAlign = "center";
-  text("MARS", sx + 75, sy + 150, `700 30px ${stencil}`, PAPER);
-  text("5 SOLS", sx + 75, sy + 40, `700 18px ${display}`, GOLD);
+  text(POSTCARD.mars, sx + 75, sy + 150, `700 30px ${stencil}`, PAPER);
+  text(POSTCARD.stamp, sx + 75, sy + 40, `700 18px ${display}`, GOLD);
 
   // The postmark, stamped over the corner of the stamp.
   c.save();
@@ -221,9 +221,9 @@ function draw(c: CanvasRenderingContext2D, p: Card) {
   c.arc(0, 0, 58, 0, Math.PI * 2);
   c.stroke();
   c.font = `700 20px ${display}`;
-  c.fillText("MARS BASE", 0, -26);
+  c.fillText(POSTCARD.postmark[0], 0, -26);
   c.font = `700 36px ${display}`;
-  c.fillText("SOL 5", 0, 12);
+  c.fillText(POSTCARD.postmark[1], 0, 12);
   c.font = `400 15px ${body}`;
   c.fillText(p.date.toUpperCase(), 0, 38, 100);
   c.lineWidth = 3;
@@ -257,7 +257,7 @@ function draw(c: CanvasRenderingContext2D, p: Card) {
   text(POSTCARD.radio(p.minutes), 690, 702, `400 24px ${body}`, INK, 450);
 
   c.textAlign = "center";
-  text("MISSION VIGIL: Junior Astronaut Mission Trainer", W / 2, 776, `700 22px ${stencil}`, "#8a7458");
+  text(NAME, W / 2, 776, `700 22px ${stencil}`, "#8a7458");
 }
 
 /** The postcard card of the win screen: a name box, the picture, and a dot flying the real distance home. */
@@ -315,21 +315,23 @@ export function Postcard({ name, setName, rank, stars, wings, children }: { name
           spellCheck={false}
           className="mt-1 block w-full rounded-lg border-2 border-sand/30 bg-dusk px-3 py-1.5 text-lg focus:border-sunset"
         />
-        <p className="mt-1 text-sm leading-snug text-sand/70"><Icon name="lock" className="mr-1 size-[1.1em]" />
-          {POSTCARD.privacy}</p>
+        <p className="mt-1 text-sm leading-snug text-sand/70">
+          <Icon name="lock" className="mr-1 size-[1.1em]" />
+          {POSTCARD.privacy}
+        </p>
       </div>
       <canvas ref={canvas} width={W} height={H} role="img" aria-label={POSTCARD.picture(shown, rank)} className="pop-in w-full rounded-lg shadow-[0_8px_30px_rgb(0_0_0/0.5)]" />
       {/* The postcard's trip home, at the real distance for today. It flies again each time it is saved. */}
       <div className="mt-2 flex items-center gap-2 text-sm" aria-hidden>
         <span className="size-3 rounded-full bg-regolith" />
-        Mars
+        {POSTCARD.trip.from}
         <div className="relative mx-1 h-px flex-1 border-t border-dashed border-sand/40">
-          <span className="absolute inset-x-0 -top-5 text-center text-sand/70">{millionKm} million km</span>
+          <span className="absolute inset-x-0 -top-5 text-center text-sand/70">{POSTCARD.trip.km(millionKm)}</span>
           <div key={saves} className="fly absolute inset-0">
             <span className="absolute -top-1.5 left-0 h-3 w-4 rounded-[2px] bg-sand shadow-[0_0_10px_var(--color-sunset)]" />
           </div>
         </div>
-        Earth
+        {POSTCARD.trip.to}
         <span className="size-3.5 rounded-full bg-sunset" />
       </div>
       <p className="-mt-2 text-sm leading-snug" role="status">

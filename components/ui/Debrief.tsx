@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { type ReactNode, useEffect, useState } from "react";
-import { type BadgeId, badges, finalCheck, reportCard } from "@/engine/scoring";
+import { type BadgeId, badges, failureCheck, finalCheck, reportCard } from "@/engine/scoring";
 import { MAX_PARTS, o2Pct } from "@/engine/simulate";
-import { BADGES, CERTIFICATE, FACT_IDS, FACTS, FAILURES, POSTCARD, type Question, QUIZ, RANKS, SECRET_IDS, SECRETS, SUCCESS } from "@/engine/story";
+import { ANSWER, BADGES, CERTIFICATE, FACT_IDS, FACTS, FAILED, FAILURES, NAME, POSTCARD, type Question, RANKS, SECRET_IDS, SECRETS, SUCCESS } from "@/engine/story";
 import { useGame } from "@/store/game";
 import { Icon } from "./Icon";
 import { Postcard } from "./Postcard";
@@ -12,6 +12,18 @@ import { Postcard } from "./Postcard";
 const PRIMARY = "rounded-xl bg-sunset px-4 py-2 font-display text-lg font-bold text-dusk hover:bg-sand";
 const SECONDARY = "rounded-xl border border-sand/30 px-4 py-2 font-display text-lg hover:border-sunset hover:text-sunset";
 const BEST_KEY = "mission-vigil:chapter-1:best";
+/** The questions of the last final check in this browser, so the next one asks others. */
+const ASKED_KEY = "mission-vigil:chapter-1:asked";
+
+/** Read back what the last check asked. Storage can be blocked or hold anything, so keep only strings. */
+function lastAsked(): readonly string[] {
+  try {
+    const saved: unknown = JSON.parse(localStorage.getItem(ASKED_KEY) ?? "[]");
+    return Array.isArray(saved) ? saved.filter((p): p is string => typeof p === "string") : [];
+  } catch {
+    return [];
+  }
+}
 const BADGE_IDS = Object.keys(BADGES) as BadgeId[];
 
 function Failed() {
@@ -19,17 +31,18 @@ function Failed() {
   const rewind = useGame((s) => s.rewind);
   const restart = useGame((s) => s.restart);
   const debrief = FAILURES[sim.failure!];
-  const check = QUIZ.find((q) => q.about === sim.failure);
+  // Drawn once, so the question does not change while it is being answered.
+  const [check] = useState(() => failureCheck(sim.failure!, Math.random));
   return (
     <>
-      <p className="font-display text-xl text-flare">Mission stopped</p>
+      <p className="font-display text-xl text-flare">{FAILED.stopped}</p>
       <h2 id="debrief-title" className="font-display text-5xl font-bold leading-none">
         {debrief.title}
       </h2>
       <p className="text-lg">{debrief.body}</p>
-      {sim.failure === "co2" && <p className="text-xl text-sunset">Look: there was still oxygen left, {o2Pct(sim).toFixed(1)}%. The CO₂ got you first.</p>}
+      {sim.failure === "co2" && <p className="text-xl text-sunset">{FAILED.oxygenLeft(o2Pct(sim).toFixed(1))}</p>}
       <p className="border-l-4 border-safe pl-3 text-lg">
-        <strong>Try this:</strong> {debrief.lesson}
+        <strong>{FAILED.tryThis}</strong> {debrief.lesson}
       </p>
       <p className="text-sand/80">
         {debrief.story}{" "}
@@ -39,16 +52,16 @@ function Failed() {
       </p>
       {check && (
         <div className="border-t border-sand/15 pt-3">
-          <p className="font-display text-xl text-sunset">Quick check before you go again</p>
+          <p className="font-display text-xl text-sunset">{FAILED.check}</p>
           <Ask key={check.prompt} question={check} />
         </div>
       )}
       <div className="flex flex-wrap gap-3">
         <button type="button" onClick={rewind} className={PRIMARY} autoFocus>
-          Try again from ARIA&apos;s last message
+          {FAILED.rewind}
         </button>
         <button type="button" onClick={restart} className={SECONDARY}>
-          Start the chapter again
+          {FAILED.restart}
         </button>
       </div>
     </>
@@ -80,10 +93,10 @@ function Ask({ question, onDone, focus }: { question: Question; onDone?: (firstT
       <p className="mt-2 min-h-12" role="status">
         {solved ? (
           <>
-            <strong className="text-safe">{wrong.length === 0 ? "Yes!" : "That is it."}</strong> {question.why}
+            <strong className="text-safe">{wrong.length === 0 ? ANSWER.right : ANSWER.found}</strong> {question.why}
           </>
         ) : (
-          wrong.length > 0 && <strong className="text-sulfur">Not quite. Try another one!</strong>
+          wrong.length > 0 && <strong className="text-sulfur">{ANSWER.wrong}</strong>
         )}
       </p>
     </div>
@@ -92,7 +105,12 @@ function Ask({ question, onDone, focus }: { question: Question; onDone?: (firstT
 
 /** The final check with Earth: five questions, one at a time. A right first pick earns a wing. */
 function FinalCheck({ onDone }: { onDone: (wings: number) => void }) {
-  const [questions] = useState(() => finalCheck(useGame.getState().sim.facts));
+  const [questions] = useState(() => finalCheck(useGame.getState().sim, Math.random, lastAsked()));
+  useEffect(() => {
+    try {
+      localStorage.setItem(ASKED_KEY, JSON.stringify(questions.map((q) => q.prompt)));
+    } catch {} // storage is blocked: the next check may repeat a question, nothing worse
+  }, [questions]);
   const [at, setAt] = useState(0);
   const [wings, setWings] = useState(0);
   const [solved, setSolved] = useState(false);
@@ -106,14 +124,14 @@ function FinalCheck({ onDone }: { onDone: (wings: number) => void }) {
     <>
       <div className="flex items-baseline justify-between gap-3">
         <h2 id="debrief-title" className="font-display text-3xl font-bold text-sunset">
-          Question {at + 1} of {questions.length}
+          {SUCCESS.question(at + 1, questions.length)}
         </h2>
-        <p className="font-display text-2xl text-sulfur" role="img" aria-label={`${wings} wings so far`}>
+        <p className="font-display text-2xl text-sulfur" role="img" aria-label={SUCCESS.wingsSoFar(wings)}>
           {"✦".repeat(wings)}
           <span className="text-sand/25">{"✦".repeat(questions.length - wings)}</span>
         </p>
       </div>
-      <p className="-mt-2 text-sm text-sand/70">A right first pick earns a wing.</p>
+      <p className="-mt-2 text-sm text-sand/70">{SUCCESS.wingRule}</p>
       <Ask
         key={at}
         question={questions[at]}
@@ -125,7 +143,7 @@ function FinalCheck({ onDone }: { onDone: (wings: number) => void }) {
       />
       {/* Keyed on `solved` so it takes the focus the moment it can be pressed. */}
       <button key={String(solved)} type="button" onClick={next} disabled={!solved} autoFocus={solved} className={`${PRIMARY} mt-auto self-end disabled:bg-sand/20 disabled:text-sand/50`}>
-        {last ? "Finish the call" : "Next question"}
+        {last ? SUCCESS.finish : SUCCESS.nextQuestion}
       </button>
     </>
   );
@@ -163,7 +181,7 @@ function Certificate({ name, wings, rank, stars, secrets }: { name: string; wing
   const [today] = useState(() => new Date().toLocaleDateString());
   return (
     <section className="certificate relative rounded-xl border-4 border-double border-sulfur bg-[radial-gradient(ellipse_at_top,rgb(242_194_48/0.14),transparent_70%)] p-4 text-center" aria-label={CERTIFICATE.title}>
-      <p className="font-stencil text-base tracking-wide uppercase opacity-80">Mission Vigil: Junior Astronaut Mission Trainer</p>
+      <p className="font-stencil text-base tracking-wide uppercase opacity-80">{NAME}</p>
       <p className="mt-3 text-sm opacity-70">{CERTIFICATE.goesTo}</p>
       {name ? (
         <p className="pop-in font-display text-6xl leading-none font-bold break-words text-sulfur" style={{ animationDelay: "200ms" }}>
@@ -179,7 +197,7 @@ function Certificate({ name, wings, rank, stars, secrets }: { name: string; wing
       <div className="mt-3 flex items-center justify-center gap-4">
         <Seal rank={rank} />
         <div className="text-left">
-          <p className="font-display text-4xl leading-none text-sulfur" role="img" aria-label={`${stars} of 3 stars`}>
+          <p className="font-display text-4xl leading-none text-sulfur" role="img" aria-label={SUCCESS.stars(stars)}>
             {"★".repeat(stars)}
             <span className="opacity-25">{"★".repeat(3 - stars)}</span>
           </p>
@@ -231,14 +249,14 @@ function Collection({ title, items, columns, onPick }: { title: string; items: r
   return (
     <div>
       <h3 className="font-display text-xl">
-        {title}: {lit} of {items.length}
+        {SUCCESS.collected(title, lit, items.length)}
       </h3>
       <ul className={`mt-1 grid gap-1.5 ${columns}`}>
         {items.map((item, i) => (
           <li key={item.id} className="pop-in" style={{ animationDelay: `${i * 40}ms` }}>
             <button
               type="button"
-              aria-label={item.lit ? item.name : `${item.name}, not found yet`}
+              aria-label={item.lit ? item.name : SUCCESS.notFound(item.name)}
               onClick={() => onPick(item)}
               className={`flex h-11 w-full items-center justify-center gap-1 rounded-md border-2 px-1 font-display text-lg ${item.lit ? "border-sulfur/60 bg-sulfur/10 text-sulfur" : "border-dashed border-sand/20 text-sand/40"}`}
             >
@@ -276,14 +294,14 @@ function Passed() {
   );
   const loot: Loot[] = [
     ...BADGE_IDS.map((id) => ({ id, icon: <Icon name={BADGES[id].icon} className="size-5" />, name: BADGES[id].name, lit: won.includes(id), text: BADGES[id].how })),
-    ...FACT_IDS.map((id) => ({ id, icon: sim.facts.includes(id) ? "✦" : "?", name: sim.facts.includes(id) ? FACTS[id].title : "Fact card", lit: sim.facts.includes(id), text: sim.facts.includes(id) ? FACTS[id].text : SUCCESS.missing, source: sim.facts.includes(id) ? FACTS[id].source : undefined })),
+    ...FACT_IDS.map((id) => ({ id, icon: sim.facts.includes(id) ? "✦" : "?", name: sim.facts.includes(id) ? FACTS[id].title : SUCCESS.factCard, lit: sim.facts.includes(id), text: sim.facts.includes(id) ? FACTS[id].text : SUCCESS.missing, source: sim.facts.includes(id) ? FACTS[id].source : undefined })),
     // A secret not found yet shows only its riddle.
     ...SECRET_IDS.map((id) => ({ id, icon: sim.secrets.includes(id) ? "◆" : "?", name: sim.secrets.includes(id) ? SECRETS[id].name : SUCCESS.secret, lit: sim.secrets.includes(id), text: sim.secrets.includes(id) ? SECRETS[id].how : SECRETS[id].riddle })),
   ];
   const tip = card.stars < 3 ? SUCCESS.tipStars : card.rank < 2 ? SUCCESS.tipRank : SUCCESS.next;
   return (
     <>
-      <div className="flex gap-1.5" role="progressbar" aria-label="End of mission" aria-valuemin={1} aria-valuemax={STEPS} aria-valuenow={step + 1}>
+      <div className="flex gap-1.5" role="progressbar" aria-label={SUCCESS.progress} aria-valuemin={1} aria-valuemax={STEPS} aria-valuenow={step + 1}>
         {Array.from({ length: STEPS }, (_, i) => (
           <span key={i} className={`h-1.5 flex-1 rounded-full ${i <= step ? "bg-sunset" : "bg-sand/20"}`} />
         ))}
@@ -292,7 +310,7 @@ function Passed() {
       <div key={`${step}-${calling}`} className="rise flex flex-1 flex-col gap-4" aria-live="polite">
         {step === 0 && (
           <>
-            <p className="mt-4 text-center font-display text-7xl leading-none text-sulfur" role="img" aria-label={`${card.stars} of 3 stars`}>
+            <p className="mt-4 text-center font-display text-7xl leading-none text-sulfur" role="img" aria-label={SUCCESS.stars(card.stars)}>
               {[0, 1, 2].map((i) => (
                 <span key={i} className={`pop-in inline-block ${i < card.stars ? "" : "text-sand/25"}`} style={{ animationDelay: `${300 + i * 350}ms` }}>
                   ★
@@ -322,7 +340,7 @@ function Passed() {
             <dl className="flex flex-col gap-3">
               {[
                 [<Icon key="rank" name="medal" className="mx-auto size-8" />, SUCCESS.rank, RANKS[card.rank]],
-                ["⬢", SUCCESS.parts, `${sim.earned} of ${MAX_PARTS}`],
+                ["⬢", SUCCESS.parts, SUCCESS.partsOf(sim.earned, MAX_PARTS)],
               ].map(([icon, label, value], i) => (
                 <div key={String(label)} className="pop-in flex items-center gap-3 rounded-xl border border-sand/15 bg-sand/5 p-3" style={{ animationDelay: `${i * 200}ms` }}>
                   <span className="w-10 text-center text-3xl text-sulfur" aria-hidden>
@@ -347,7 +365,7 @@ function Passed() {
                 </div>
               </div>
             </dl>
-            {before > 0 && !(sim.earned > before) && <p className="text-sand/70">Your best is {before} parts.</p>}
+            {before > 0 && !(sim.earned > before) && <p className="text-sand/70">{SUCCESS.best(before)}</p>}
             {nextButton(SUCCESS.toCall)}
           </>
         )}
@@ -422,10 +440,10 @@ function Passed() {
                 {SUCCESS.print}
               </button>
               <Link href="/" className={SECONDARY}>
-                Back to the start
+                {SUCCESS.home}
               </Link>
               <button type="button" onClick={restart} className={PRIMARY} autoFocus>
-                Play again
+                {SUCCESS.again}
               </button>
             </div>
           </>

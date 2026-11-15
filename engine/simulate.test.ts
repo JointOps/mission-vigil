@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { badges, finalCheck, reportCard } from "./scoring.ts";
 import { type Area, buy, co2Pct, EVENTS, FLARE, initialState, isCold, isOver, isStorm, type Job, jobs, MAX_PARTS, o2Pct, powerAt, PLANNER_O2_PCT, reserveSols, seen, setCells, type SimState, spot, STORM, step, take, TUTORIAL_DONE, UPGRADE_COST, TASKS, morning } from "./simulate.ts";
+import { FACT_IDS, QUIZ } from "./story.ts";
 import { areaOf, type Point, route, START, STATIONS, stationNear, walk } from "./world.ts";
 
 const TICK = 0.1;
@@ -245,14 +246,49 @@ test("the astronaut can walk between every pair of stations", () => {
   assert.equal(stationNear(START), null);
 });
 
-test("the final check asks five questions, and only about fact cards the player found", () => {
-  const few = finalCheck(["sol", "co2", "moxie"]);
-  assert.equal(few.length, 5);
-  assert.ok(few.every((q) => !q.card), "no card questions without the cards");
-  const more = finalCheck(["sol", "delay", "water", "gather"]);
-  assert.deepEqual(more.slice(3).map((q) => q.card), ["gather", "water"]);
-  assert.equal(new Set(more).size, 5);
-  assert.notDeepEqual(more.slice(0, 3), few.slice(0, 3), "another mission, other questions");
+test("walking into a wall slides along it, and walking straight at it stops", () => {
+  const byWall = { x: 1, z: -2.55 };
+  assert.deepEqual(walk(byWall, 0.1, -0.1), { x: 1.1, z: -2.55 }, "a diagonal push slides along the north wall");
+  // The store gives up on a tapped route only when walk() hands back the same point.
+  assert.equal(walk(byWall, 0.01, -0.1), byWall, "nearly straight into the wall: stand still, do not run on the spot");
+});
+
+/** Seeded random numbers, so each test sees the same "random" check on every run. */
+const seeded = (seed: number) => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const won = (patch: Partial<SimState> = {}): SimState => ({ ...initialState(), won: true, ...patch });
+
+test("the final check asks five different questions, about cards only if found, with the answers shuffled", () => {
+  const s = won({ facts: ["sol", "delay", "water", "gather"] });
+  let moved = false;
+  for (let seed = 1; seed < 40; seed++) {
+    const check = finalCheck(s, seeded(seed), []);
+    assert.equal(check.length, 5);
+    assert.equal(new Set(check.map((q) => q.prompt)).size, 5);
+    for (const q of check) {
+      assert.ok(!q.card || s.facts.includes(q.card), `asked about the ${q.card} card, which was not found`);
+      const original = QUIZ.find((o) => o.prompt === q.prompt)!;
+      assert.equal(q.choices[q.answer], original.choices[original.answer], "the right answer is still right");
+      moved ||= q.answer !== original.answer;
+    }
+  }
+  assert.ok(moved, "the right answer is not always in the same place");
+  assert.ok(finalCheck(won(), seeded(1), []).every((q) => !q.card), "no card questions without the cards");
+});
+
+test("the final check starts with the player's own worst moment", () => {
+  assert.equal(finalCheck(won({ minTempC: 4 }), seeded(3), [])[0].about, "cold");
+  assert.equal(finalCheck(won({ peakCo2Pct: 2 }), seeded(3), [])[0].about, "co2");
+  assert.equal(finalCheck(won({ dose: 0.2 }), seeded(3), [])[0].about, "radiation");
+});
+
+test("playing again brings new questions, and every fact card has one", () => {
+  const s = won({ facts: FACT_IDS });
+  for (let seed = 1; seed < 40; seed++) {
+    const first = finalCheck(s, seeded(seed), []);
+    const again = finalCheck(s, seeded(seed + 100), first.map((q) => q.prompt));
+    assert.ok(again.every((q) => !first.some((f) => f.prompt === q.prompt)), "a question came back straight away");
+  }
+  for (const id of FACT_IDS) assert.ok(QUIZ.some((q) => q.card === id), `no question for the ${id} card`);
 });
 
 test("the hidden telescope finds the secret card once, and no job ever points to it", () => {

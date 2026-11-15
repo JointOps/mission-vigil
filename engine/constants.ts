@@ -5,28 +5,10 @@ export type Constant = { readonly value: number; readonly unit: string; readonly
 export const OXYGEN_KG_PER_DAY = { value: 0.84, unit: "kg/day", kind: "real" } as const satisfies Constant;
 /** Carbon dioxide production per person per day. https://ntrs.nasa.gov/api/citations/20100036823/downloads/20100036823.pdf */
 export const CO2_KG_PER_DAY = { value: 1, unit: "kg/day", kind: "real" } as const satisfies Constant;
-/** Food solids per person per day. https://ntrs.nasa.gov/api/citations/20190027610/downloads/20190027610.pdf */
-export const FOOD_KG_PER_DAY = { value: 0.62, unit: "kg/day", kind: "real" } as const satisfies Constant;
-/** Total water use per person per day. https://www.frontiersin.org/journals/space-technologies/articles/10.3389/frspt.2024.1461389/epub */
-export const WATER_KG_PER_DAY = { value: 4.35, unit: "kg/day", kind: "real" } as const satisfies Constant;
-/** Approximate Mars surface radiation rate. https://www.sciencedaily.com/releases/2013/12/131209181133.htm */
-export const SURFACE_RADIATION_MSV_PER_SOL = { value: 0.64, unit: "mSv/sol", kind: "real" } as const satisfies Constant;
-/** Approximate cruise radiation rate. https://www.scientificamerican.com/article/radiation-on-mars-managea/ */
-export const CRUISE_RADIATION_MSV_PER_DAY = { value: 1.84, unit: "mSv/day", kind: "real" } as const satisfies Constant;
 /** Approximate length of a Mars sol in minutes. https://www.sciencedaily.com/releases/2013/12/131209181133.htm */
 export const SOL_MINUTES = { value: 1479, unit: "minutes", kind: "real" } as const satisfies Constant;
 /** Approximate interval between launch windows. https://www.nsta.org/science-scope/science-scope-julyaugust-2020/back-mars */
 export const LAUNCH_WINDOW_MONTHS = { value: 26, unit: "months", kind: "real" } as const satisfies Constant;
-/** Recommended career dose limit. https://www.nationalacademies.org/news/nasa-should-update-astronaut-radiation-exposure-limits-improve-communication-of-cancer-risks */
-export const CAREER_LIMIT_MSV = { value: 600, unit: "mSv", kind: "real" } as const satisfies Constant;
-/** Cruise dose derived from 180 days at 1.84 mSv/day, rounded in the white paper. https://www.scientificamerican.com/article/radiation-on-mars-managea/ */
-export const CRUISE_DOSE_MSV = { value: 331, unit: "mSv", kind: "real" } as const satisfies Constant;
-/** Baseline dose derived from 350 sols at 0.64 mSv/sol. https://www.sciencedaily.com/releases/2013/12/131209181133.htm */
-export const BASELINE_SURFACE_DOSE_MSV = { value: 224, unit: "mSv", kind: "real" } as const satisfies Constant;
-/** Tunable surface dose budget, a game rule informed by radiation research. https://www.nationalacademies.org/news/nasa-should-update-astronaut-radiation-exposure-limits-improve-communication-of-cancer-risks */
-export const SURFACE_BUDGET_MSV = { value: 300, unit: "mSv", kind: "game" } as const satisfies Constant;
-/** Event allowance derived from the game budget minus baseline dose. https://www.sciencedaily.com/releases/2013/12/131209181133.htm */
-export const EVENT_ALLOWANCE_MSV = { value: 76, unit: "mSv", kind: "game" } as const satisfies Constant;
 
 // ── Chapter 1 ──────────────────────────────────────────────────────────────
 

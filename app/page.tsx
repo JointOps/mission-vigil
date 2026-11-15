@@ -11,18 +11,16 @@ export default function Home() {
   return (
     <main className="relative h-dvh overflow-hidden">
       {/* Just before sunset, when the sky around the sun turns blue on Mars. */}
-      <div className="absolute inset-0">
-        <Outpost fixedHour={17.7} />
-      </div>
+      <Outpost fixedHour={17.7} />
       <div className="pointer-events-none relative flex h-full flex-col justify-between gap-4 bg-linear-to-t from-dusk via-dusk/20 to-transparent p-5 md:p-10">
         <div className="flex items-start justify-between gap-6">
           <header>
             <h1 className="stamp font-stencil text-[clamp(4rem,12vw,9rem)] leading-[0.82] font-black uppercase">
-              Mission
+              {TITLE.name[0]}
               <br />
-              Vigil
+              {TITLE.name[1]}
             </h1>
-            <p className="mt-3 font-display text-2xl md:text-3xl">Junior astronaut mission trainer</p>
+            <p className="mt-3 font-display text-2xl md:text-3xl">{TITLE.subtitle}</p>
           </header>
           {/* Where Earth is today, for real: the whole story is the way home. */}
           <div className="pointer-events-auto hidden w-72 lg:block">
@@ -45,14 +43,14 @@ export default function Home() {
               const body = (
                 <>
                   <p className="flex justify-between font-display text-sm tracking-wide text-sand/70">
-                    <span>Chapter {code(i)}</span>
+                    <span>{TITLE.chapter(code(i))}</span>
                     {!open && <Icon name="lock" className="size-4" />}
                   </p>
                   <h2 className="font-display text-2xl leading-none font-bold uppercase">{chapter.name}</h2>
                   <p className="text-sm leading-snug text-sand/80">{chapter.teaser}</p>
                   <div className="mt-auto flex items-center justify-between gap-2 pt-1">
                     {/* Each chapter is harder than the last. */}
-                    <span className="flex gap-1" role="img" aria-label={`Difficulty ${i + 1} of ${CHAPTERS.length}`}>
+                    <span className="flex gap-1" role="img" aria-label={TITLE.difficulty(i + 1, CHAPTERS.length)}>
                       {CHAPTERS.map((_, d) => (
                         <span key={d} className={`h-1.5 w-2.5 rounded-full ${d <= i ? "bg-sunset" : "bg-sand/20"}`} />
                       ))}
