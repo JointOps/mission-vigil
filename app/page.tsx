@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Outpost } from "@/components/three/Outpost";
+import { Icon } from "@/components/ui/Icon";
 import { SpaceView } from "@/components/ui/SpaceView";
 import { CHAPTERS, TITLE } from "@/engine/story";
 
@@ -45,7 +46,7 @@ export default function Home() {
                 <>
                   <p className="flex justify-between font-display text-sm tracking-wide text-sand/70">
                     <span>Chapter {code(i)}</span>
-                    {!open && <span aria-hidden>🔒</span>}
+                    {!open && <Icon name="lock" className="size-4" />}
                   </p>
                   <h2 className="font-display text-2xl leading-none font-bold uppercase">{chapter.name}</h2>
                   <p className="text-sm leading-snug text-sand/80">{chapter.teaser}</p>

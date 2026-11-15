@@ -128,7 +128,8 @@ body {
 
   /* Without its fade-out a fact card would never leave, so it is shown once at the end instead. */
   .toast,
-  .signal {
+  .signal,
+  .fly {
     display: none;
   }
 }
@@ -157,8 +158,17 @@ body {
   .certificate {
     position: fixed;
     inset: 2rem;
-    color: #000;
     border-color: #000;
+    background: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 3rem 15%;
+  }
+
+  .certificate,
+  .certificate * {
+    color: #000 !important;
   }
 }
 
@@ -221,4 +231,35 @@ body {
 
 .twinkle {
   animation: twinkle 2.4s ease-in-out infinite;
+}
+
+/* The postcard's trip home: it flies along the line from Mars to Earth. */
+@keyframes fly {
+  from {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  10% {
+    opacity: 1;
+  }
+  to {
+    transform: translateX(calc(100% - 1rem));
+  }
+}
+
+.fly {
+  animation: fly 3s ease-in-out 0.4s both;
+}
+
+/* A press squishes a button or chip a little, so every tap feels answered. */
+@media (prefers-reduced-motion: no-preference) {
+  button:not(:disabled),
+  summary {
+    transition: transform 0.1s ease-out;
+  }
+
+  button:not(:disabled):active,
+  summary:active {
+    transform: scale(0.95);
+  }
 }

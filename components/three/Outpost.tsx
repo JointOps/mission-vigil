@@ -3,7 +3,7 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useRef, useState } from "react";
 import * as THREE from "three";
-import { FLARE, isFlare, isStorm, START_OF_DAY, sunUp } from "@/engine/simulate";
+import { isAurora, isFlare, isStorm, START_OF_DAY } from "@/engine/simulate";
 import { areaOf } from "@/engine/world";
 import { useGame } from "@/store/game";
 import { Base } from "./Base";
@@ -179,7 +179,7 @@ function World({ fixedHour }: Props) {
     // The solar flare washes the yard in hard white light. The night after it,
     // the aurora overhead tints everything green. Both swell slowly: no flashing.
     flare.current = damp(flare.current, !demo && isFlare(sim.sol) ? 1 : 0, 2, delta);
-    aurora.current = damp(aurora.current, !demo && sim.sol >= FLARE.to && sim.sol < FLARE.to + 0.5 && !sunUp(sim.sol) ? 1 : 0, 0.8, delta);
+    aurora.current = damp(aurora.current, !demo && isAurora(sim.sol) ? 1 : 0, 0.8, delta);
     fill.current.color.lerp(FLARE_LIGHT, flare.current * 0.7).lerp(AURORA, aurora.current * (0.55 + 0.25 * Math.sin(t * 0.9)));
     fill.current.intensity += 0.9 * flare.current * (0.8 + 0.2 * Math.sin(t * 3)) + 0.5 * aurora.current;
     stars.current.opacity = (1 - day) * (1 - haze);

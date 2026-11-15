@@ -3,7 +3,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import * as THREE from "three";
-import { co2Pct, co2Zone, isStorm, o2Pct, o2Zone, PANELS, powerAt, ROCKS, seen, tempZone, type Upgrade } from "@/engine/simulate";
+import { co2Pct, co2Zone, isStorm, o2Pct, o2Zone, PANELS, powerAt, ROCKS, seen, TASKS, tempZone, type Upgrade } from "@/engine/simulate";
 import { areaOf, BUNK, DISH, GARDEN_X, HULL, LOCK, MAST, PANEL_X, ROVER, STATIONS, TANKS, TELESCOPE } from "@/engine/world";
 import { useGame } from "@/store/game";
 import { BALL, Ball, Box, BOX, Cyl, flat, glow, M } from "./parts";
@@ -41,6 +41,8 @@ const DISH_SHELL = new THREE.MeshStandardMaterial({ color: "#e9dfcf", roughness:
 /** Power box lights: in use, waiting to be plugged in, lost to dust. */
 const CELL = [glow("#8ec5f0", 2.5), glow("#f2c230", 0.9), M.dark];
 const PANEL_FACE = PANELS.map(() => new THREE.MeshStandardMaterial({ color: "#1d3157", roughness: 0.3, metalness: 0.5, flatShading: true }));
+/** Grey fluff on the air vent. It thins as the astronaut vacuums, and settles again each morning. */
+const VENT_DUST = new THREE.MeshStandardMaterial({ color: "#a59484", roughness: 1, transparent: true, opacity: 0.9, depthWrite: false });
 const PANEL_DUST = PANELS.map(() => new THREE.MeshStandardMaterial({ color: "#b98058", roughness: 1, transparent: true, opacity: 1, depthWrite: false }));
 
 const ZONE_COLOR = { safe: "#86d6b0", caution: "#f2c230", danger: "#ff5533" };
@@ -134,6 +136,8 @@ export function Base({ demo }: Props) {
     const ready = sim.work.console > 0;
     BUTTON.emissive.set(ready || sim.won ? "#59e08a" : "#ff5533");
     BUTTON.emissiveIntensity = sim.won ? 3 : ready ? 3 * pulse : 0.4;
+
+    VENT_DUST.opacity = damp(VENT_DUST.opacity, demo ? 0 : (sim.work.vents / TASKS.vents.seconds) * 0.9, 4, delta);
 
     // Solar panels: dust fades in and out.
     PANELS.forEach((id, i) => (PANEL_DUST[i].opacity = damp(PANEL_DUST[i].opacity, !demo && sim.work[id] > 0 ? 0.92 : 0, 3, delta)));
@@ -234,6 +238,18 @@ export function Base({ demo }: Props) {
       {/* The dial under it is what you read in a leak */}
       <Cyl p={[-0.95, 1.02, -3.16]} r={[HALF_PI, 0, 0]} s={[0.17, 0.05, 0.17]} m={M.cloth} />
       <Box p={[-0.9, 1.06, -3.12]} r={[0, 0, -0.7]} s={[0.03, 0.15, 0.02]} m={M.trim} />
+
+      {/* Air vent: dusty until it is vacuumed, with the hand vacuum waiting below */}
+      <group position={[STATIONS.vents.x, 0, -3.17]}>
+        <Box p={[0, 1.15, 0]} s={[0.95, 0.6, 0.04]} m={M.dark} />
+        {[-0.18, -0.06, 0.06, 0.18].map((y) => (
+          <Box key={y} p={[0, 1.15 + y, 0.03]} s={[0.8, 0.05, 0.03]} m={M.metal} />
+        ))}
+        <Box p={[0, 1.15, 0.06]} s={[0.85, 0.5, 0.02]} m={VENT_DUST} />
+        <Cyl p={[-0.35, 0.25, 0.35]} s={[0.13, 0.45, 0.13]} m={M.hazard} />
+        <Cyl p={[-0.35, 0.5, 0.35]} s={[0.07, 0.1, 0.07]} m={M.dark} />
+        <Box p={[-0.2, 0.2, 0.45]} r={[0, 0, 0.9]} s={[0.05, 0.4, 0.05]} m={M.rubber} />
+      </group>
 
       {/* Power box: a lever and one light for each power */}
       <group position={[STATIONS.power.x, 0, -3]}>

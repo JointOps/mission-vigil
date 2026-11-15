@@ -3,6 +3,7 @@
 import { type KeyboardEvent, type PointerEvent, useEffect, useRef, useState } from "react";
 import { TELESCOPE } from "@/engine/story";
 import { isPlaying, useGame } from "@/store/game";
+import { Icon } from "./Icon";
 import { SpaceView } from "./SpaceView";
 
 // The hidden telescope's eyepiece: a wide night sky to drag around, zoom into,
@@ -96,7 +97,7 @@ const PICTURE = (
 const clamp = (v: number, max: number) => Math.min(max, Math.max(0, v));
 
 function NightSky() {
-  const spotEarth = useGame((s) => s.spotEarth);
+  const spot = useGame((s) => s.spot);
   const [view, setView] = useState(START);
   const [zoom, setZoom] = useState(0);
   const [dragging, setDragging] = useState(false);
@@ -104,10 +105,10 @@ function NightSky() {
   const k = SCALE * ZOOMS[zoom];
   const target = (Object.keys(AT) as Thing[]).find((t) => Math.hypot(AT[t].x - view.x, AT[t].y - view.y) <= SIGHTS / k);
 
-  // Finding Earth for the first time unlocks the secret fact card.
+  // Each thing in the sights counts once: Earth unlocks the secret card, all four the sky tour.
   useEffect(() => {
-    if (target === "earth") spotEarth();
-  }, [target, spotEarth]);
+    if (target) spot(target);
+  }, [target, spot]);
 
   const look = (dx: number, dy: number) => setView((v) => ({ x: clamp(v.x + dx, SKY.w), y: clamp(v.y + dy, SKY.h - 40) }));
   // Smaller than the sights, so the buttons can centre anything in the sky.
@@ -227,7 +228,8 @@ export function Telescope() {
   return (
     <section className="rise rounded-2xl border border-sunset bg-dusk/90 px-4 pt-3 pb-2 backdrop-blur-md" aria-label={TELESCOPE.title}>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-display text-xl font-semibold">🔭 {TELESCOPE.title}</h2>
+        <h2 className="font-display text-xl font-semibold"><Icon name="telescope" className="mr-1.5" />
+          {TELESCOPE.title}</h2>
         <div className="flex gap-1">
           {tabButton("sky", TELESCOPE.sky)}
           {tabButton("system", TELESCOPE.system)}
